@@ -1,0 +1,89 @@
+{
+    "123456": {
+        "hostname": "JFFHEUIERG",
+        "responsavel": "SDHGUIE",
+        "localizacao": "DGFIUSH",
+        "tipo": "SERVIDORES",
+        "vulnerabilidades": [
+            {
+                "cve": "CVE-2026-1236",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-12456",
+                "severidade": "Alta",
+                "status": "Identificada"
+            }
+        ]
+    },
+    "147258": {
+        "hostname": "JDJDJFJF",
+        "responsavel": "SDHGUIE",
+        "localizacao": "DGFIUSH",
+        "tipo": "SERVIDORES",
+        "vulnerabilidades": [
+            {
+                "cve": "CVE-2026-12456",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-12456",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-136975",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-136975",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-136975",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-136975",
+                "severidade": "Alta",
+                "status": "Identificada"
+            }
+        ]
+    },
+    "101": {
+        "hostname": "OAKASKS",
+        "responsavel": "65626",
+        "localizacao": "GGIKJNH",
+        "tipo": "Computadores",
+        "vulnerabilidades": [
+            {
+                "cve": "CVE-2026-15963",
+                "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-123654",
+                "severidade": "Média",
+                "status": "Em Correção"
+            }
+        ]
+    },
+    "1254": {
+        "hostname": "COMPUTADOR DO QUARTO",
+        "responsavel": "LAILDA",
+        "localizacao": "QUARTO 1",
+        "tipo": "Computadores",
+        "vulnerabilidades": [
+            {
+                "cve": "CVE-2026-1478",
+                "severidade": "Crítica",
+                "status": "Em Análise"
+            }
+        ]
+    }
+}
