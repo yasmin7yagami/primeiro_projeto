@@ -1,0 +1,65 @@
+import customtkinter as ctk
+
+# Configuração do tema 🌙
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("pink")
+
+app = ctk.CTk()
+app.title("Sistema de Inventário de TI")
+app.geometry("500x600")
+
+# Exemplo de base de dados para teste na memória 🗂️
+base_ativos = {
+    101: {
+        "hostname": "srv-web-01",
+        "responsavel": "Carlos",
+        "localizacao": "Data Center",
+        "tipo": "SERVIDORES",
+        "vulnerabilidades": [{"cve": "CVE-2024-1234", "severidade": "Alta", "status": "Identificada"}]
+    }
+}
+
+# --- FUNÇÃO PARA LISTAR OS ATIVOS 📜 ---
+def listar_ativos():
+    # 1. Liberamos a caixa de texto para edição temporariamente 🔓
+    caixa_relatorio.configure(state="normal")
+    
+    # 2. Limpamos o conteúdo anterior 🧹
+    caixa_relatorio.delete("1.0", ctk.END)
+    
+    if not base_ativos:
+        caixa_relatorio.insert(ctk.END, "⚠️ Nenhum ativo cadastrado na base.\n")
+    else:
+        # 3. Percorremos o dicionário e inserimos o texto formatado ✍️
+        for id_ativo, ativo in base_ativos.items():
+            texto = f"🆔 ID: {id_ativo}\n"
+            texto += f"💻 Hostname: {ativo['hostname']}\n"
+            texto += f"👤 Responsável: {ativo['responsavel']}\n"
+            texto += f"📍 Localização: {ativo['localizacao']}\n"
+            texto += f"🏷️ Tipo: {ativo['tipo']}\n"
+            
+            if ativo['vulnerabilidades']:
+                texto += f"⚠️ Vulnerabilidades ({len(ativo['vulnerabilidades'])}):\n"
+                for v in ativo['vulnerabilidades']:
+                    texto += f"   • {v['cve']} | {v['severidade']} | Status: {v['status']}\n"
+            else:
+                texto += "✅ Sem vulnerabilidades registradas.\n"
+            
+            texto += "-" * 40 + "\n\n"
+            caixa_relatorio.insert(ctk.END, texto)
+            
+    # 4. Bloqueamos a caixa novamente para o usuário não apagar o texto 🔒
+    caixa_relatorio.configure(state="disabled")
+
+# --- ELEMENTOS VISUAIS (WIDGETS) 🛠️ ---
+ctk.CTkLabel(app, text="📋 Consulta de Ativos", font=("Arial", 18, "bold")).pack(pady=10)
+
+btn_atualizar = ctk.CTkButton(app, text="Atualizar Lista 🔄", command=listar_ativos)
+btn_atualizar.pack(pady=5)
+
+# Painel de Texto com rolagem (Scrollable) 📜
+caixa_relatorio = ctk.CTkTextbox(app, width=420, height=300)
+caixa_relatorio.pack(pady=15)
+caixa_relatorio.configure(state="disabled") # Inicia bloqueado para escrita manual
+
+app.mainloop()
