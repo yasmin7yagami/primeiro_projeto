@@ -1,8 +1,13 @@
 import json
+import sys
+import io
 from enum import Enum
 
+# Configuração para evitar erros de acentuação/emojis no terminal do Windows
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 # ==========================================
-# 1. ENUMERAÇÃO DE TIPOS DE ATIVOS
+# 1. ENUMERAÇÃO E CONFIGURAÇÕES
 # ==========================================
 class TipoAtivo(Enum):
     SERVIDORES = 1
@@ -10,7 +15,6 @@ class TipoAtivo(Enum):
     COMPUTADORES = 3
     IMPRESSORAS = 4
 
-# Base de dados em memória (Dicionário indexado por ID - Requisito 9)
 base_ativos = {}
 NOME_ARQUIVO = "base_ativos.json"
 
@@ -20,39 +24,32 @@ NOME_ARQUIVO = "base_ativos.json"
 def salvar_dados():
     """Converte o dicionário base_ativos e o salva no arquivo JSON."""
     try:
-        # Como as chaves no JSON são sempre strings, converteremos a estrutura para salvar
-        dados_para_salvar = {}
-        for id_ativo, ativo in base_ativos.items():
-            dados_para_salvar[str(id_ativo)] = ativo
-
+        dados_para_salvar = {str(id_ativo): ativo for id_ativo, ativo in base_ativos.items()}
         with open(NOME_ARQUIVO, "w", encoding="utf-8") as arquivo:
             json.dump(dados_para_salvar, arquivo, indent=4, ensure_ascii=False)
-        print("💾 Dados salvos com sucesso no arquivo!")
+        print("💾 Dados salvos com sucesso!")
     except Exception as e:
         print(f"⚠️ Erro ao salvar dados: {e}")
 
 def carregar_dados():
-    """Lê o arquivo JSON e restaura o dicionário base_ativos na memória."""
+    """Lê o arquivo JSON e restaura a base de dados na memória."""
     global base_ativos
     try:
         with open(NOME_ARQUIVO, "r", encoding="utf-8") as arquivo:
             dados_carregados = json.load(arquivo)
-            
-            # Converte as chaves (IDs) de volta de string para inteiro
             base_ativos = {int(id_ativo): dados for id_ativo, dados in dados_carregados.items()}
             print("📂 Dados carregados do arquivo com sucesso!")
     except FileNotFoundError:
-        print("ℹ️ Arquivo de dados não encontrado. Iniciando com uma base vazia.")
+        print("ℹ️ Arquivo de dados não encontrado. Iniciando com base vazia.")
         base_ativos = {}
     except json.JSONDecodeError:
-        print("⚠️ Erro ao ler o arquivo JSON (formato inválido). Iniciando com base vazia.")
+        print("⚠️ Erro ao ler arquivo JSON. Iniciando com base vazia.")
         base_ativos = {}
 
 # ==========================================
-# 3. FUNÇÕES AUXILIARES E VALIDACÕES
+# 3. VALIDAÇÕES E FUNÇÕES AUXILIARES
 # ==========================================
 def selecionar_tipo_ativo():
-    """Exibe os tipos da Enum e valida a escolha do usuário."""
     print("\n--- Tipos de Ativos Disponíveis ---")
     for tipo in TipoAtivo:
         print(f"[{tipo.value}] {tipo.name.replace('_', ' ').title()}")
@@ -62,8 +59,7 @@ def selecionar_tipo_ativo():
             opcao = int(input("Escolha o código do tipo de ativo: "))
             if opcao in [tipo.value for tipo in TipoAtivo]:
                 return TipoAtivo(opcao)
-            else:
-                print("⚠️ Código inválido! Escolha um número da lista acima.")
+            print("⚠️ Código inválido! Escolha um número da lista acima.")
         except ValueError:
             print("⚠️ Entrada inválida! Digite apenas números inteiros.")
 
@@ -72,7 +68,6 @@ def validar_cve(cve_texto):
     return cve_texto.upper().startswith("CVE-") and len(cve_texto) >= 9
 
 def exibir_dados_ativo(id_ativo, ativo):
-    """Exibe as informações detalhadas de um ativo e suas vulnerabilidades."""
     print("\n----------------------------------")
     print(f"🆔 ID: {id_ativo}")
     print(f"💻 Hostname: {ativo['hostname']}")
@@ -80,11 +75,10 @@ def exibir_dados_ativo(id_ativo, ativo):
     print(f"📍 Localização: {ativo['localizacao']}")
     print(f"🏷️ Tipo: {ativo['tipo']}")
     
-    # Requisito 8: Trata exibição de vulnerabilidades
     if ativo['vulnerabilidades']:
         print(f"⚠️ Vulnerabilidades registradas ({len(ativo['vulnerabilidades'])}):")
         for vuln in ativo['vulnerabilidades']:
-            print(f"  • Código/CVE: {vuln['cve']} | Severidade: {vuln['severidade']} | Status: {vuln['status']}")
+            print(f"  • CVE: {vuln['cve']} | Severidade: {vuln['severidade']} | Status: {vuln['status']}")
     else:
         print("✅ Nenhuma vulnerabilidade registrada para este ativo.")
     print("----------------------------------")
@@ -93,7 +87,6 @@ def exibir_dados_ativo(id_ativo, ativo):
 # 4. OPERAÇÕES DE CRUD E VULNERABILIDADES
 # ==========================================
 def cadastrar_ativo():
-    """Cadastra um novo ativo na base de dados (Create - Requisito 3)."""
     print("\n--- ➕ Cadastrar Novo Ativo ---")
     try:
         id_ativo = int(input("Digite o ID único do ativo (número): "))
@@ -108,10 +101,8 @@ def cadastrar_ativo():
 
         responsavel = input("Digite o nome do responsável: ").strip()
         localizacao = input("Digite o setor ou localização: ").strip()
-        
         tipo = selecionar_tipo_ativo()
 
-        # Salvando a estrutura completa no dicionário
         base_ativos[id_ativo] = {
             "hostname": hostname,
             "responsavel": responsavel,
@@ -119,14 +110,13 @@ def cadastrar_ativo():
             "tipo": tipo.name,
             "vulnerabilidades": []
         }
-        salvar_dados()  # Salva a alteração
+        salvar_dados()
         print(f"\n✅ Ativo '{hostname}' cadastrado com sucesso!")
 
     except ValueError:
         print("⚠️ Erro: O ID deve ser um número inteiro válido.")
 
 def buscar_ativo():
-    """Realiza a busca por ID ou por Hostname (Read - Requisito 4)."""
     print("\n--- 🔍 Consultar Ativo ---")
     print("[1] Buscar por ID")
     print("[2] Buscar por Hostname")
@@ -156,7 +146,6 @@ def buscar_ativo():
         print("⚠️ Opção de busca inválida.")
 
 def alterar_ativo():
-    """Atualiza as informações do ativo (Update - Requisito 5)."""
     print("\n--- ✏️ Alterar Dados do Ativo ---")
     try:
         id_ativo = int(input("Digite o ID do ativo que deseja alterar: "))
@@ -184,20 +173,19 @@ def alterar_ativo():
             novo_tipo = selecionar_tipo_ativo()
             ativo['tipo'] = novo_tipo.name
 
-        salvar_dados()  # Salva a alteração
+        salvar_dados()
         print(f"\n✅ Ativo ID {id_ativo} atualizado com sucesso!")
 
     except ValueError:
         print("⚠️ Erro: Digite um ID numérico válido.")
 
 def excluir_ativo():
-    """Remove um ativo da base de dados (Delete - Requisito 6)."""
     print("\n--- 🗑️ Excluir Ativo ---")
     try:
         id_ativo = int(input("Digite o ID do ativo que deseja excluir: "))
         if id_ativo in base_ativos:
             ativo_removido = base_ativos.pop(id_ativo)
-            salvar_dados()  # Salva a alteração
+            salvar_dados()
             print(f"✅ Ativo '{ativo_removido['hostname']}' excluído com sucesso!")
         else:
             print("⚠️ Erro: Ativo não encontrado na base de dados.")
@@ -215,7 +203,7 @@ def gerenciar_vulnerabilidades():
 
         cve = input("Digite o código/CVE (ex: CVE-2024-1234): ").strip()
         if not validar_cve(cve):
-            print("⚠️ Erro: Formato de CVE inválido! Deve começar com 'CVE-' e conter ao menos 9 caracteres.")
+            print("⚠️ Erro: Formato de CVE inválido! Deve começar com 'CVE-' e ter ao menos 9 caracteres.")
             return
 
         severidade = input("Digite a severidade (Baixa/Média/Alta/Crítica): ").strip()
@@ -228,7 +216,7 @@ def gerenciar_vulnerabilidades():
         }
 
         base_ativos[id_ativo]["vulnerabilidades"].append(nova_vuln)
-        salvar_dados()  # Salva a alteração
+        salvar_dados()
         print(f"\n✅ Vulnerabilidade '{cve.upper()}' associada ao ativo ID {id_ativo} com sucesso!")
 
     except ValueError:
@@ -238,7 +226,6 @@ def gerenciar_vulnerabilidades():
 # 5. MENU PRINCIPAL
 # ==========================================
 def main():
-    # Carrega os dados existentes no arquivo assim que o programa inicia
     carregar_dados()
 
     while True:
@@ -273,7 +260,7 @@ def main():
                 print("⚠️ Opção inválida! Escolha um número do menu.")
                 
         except ValueError:
-            print("⚠️ Entrada inválida! Por favor, digite apenas números inteiros.")
+            print("⚠️ Entrada inválida! Digite apenas números inteiros.")
 
 if __name__ == "__main__":
     main()
