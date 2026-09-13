@@ -1,9 +1,9 @@
 {
     "123456": {
-        "hostname": "JFFHEUIERG",
-        "responsavel": "SDHGUIE",
-        "localizacao": "DGFIUSH",
-        "tipo": "SERVIDORES",
+        "hostname": "ASDF",
+        "responsavel": "JDJDJFJ",
+        "localizacao": "SALA DE SERVIDORES",
+        "tipo": "Roteadores/Switches",
         "vulnerabilidades": [
             {
                 "cve": "CVE-2026-1236",
@@ -13,6 +13,11 @@
             {
                 "cve": "CVE-2026-12456",
                 "severidade": "Alta",
+                "status": "Identificada"
+            },
+            {
+                "cve": "CVE-2026-1576",
+                "severidade": "Baixa",
                 "status": "Identificada"
             }
         ]
