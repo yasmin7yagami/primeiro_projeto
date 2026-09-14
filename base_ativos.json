@@ -102,5 +102,18 @@
         "localizacao": "sala t30",
         "tipo": "IMPRESSORAS",
         "vulnerabilidades": []
+    },
+    "157": {
+        "hostname": "DFG",
+        "responsavel": "LKJ",
+        "localizacao": "SALA TECNICA",
+        "tipo": "Roteadores/Switches",
+        "vulnerabilidades": [
+            {
+                "cve": "CVE-2026-1236",
+                "severidade": "Crítica",
+                "status": "Identificada"
+            }
+        ]
     }
 }
