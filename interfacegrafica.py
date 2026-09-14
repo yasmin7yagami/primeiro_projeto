@@ -26,27 +26,23 @@ NOME_ARQUIVO = "base_ativos.json"
 # 🛡️ MÓDULO DE VERIFICAÇÃO DE SEGURANÇA
 # ==========================================
 def sanitizar_texto(texto):
-    """Remove caracteres perigosos para prevenir injeções."""
     if not texto:
         return ""
     texto_limpo = re.sub(r'[<>\'\"\\;]', '', texto)
     return texto_limpo.strip()
 
 def validar_cve(cve_texto):
-    """Valida estritamente se o código segue o padrão CVE-YYYY-NNNN."""
     cve_limpo = cve_texto.strip().upper()
     padrao_cve = r'^CVE-\d{4}-\d{4,7}$'
     return bool(re.match(padrao_cve, cve_limpo))
 
 def validar_hostname(hostname):
-    """Garante que o hostname contenha apenas letras, números, hífen e ponto."""
     if not hostname or len(hostname) > 63:
         return False
     padrao_hostname = r'^[a-zA-Z0-9.-]+$'
     return bool(re.match(padrao_hostname, hostname))
 
 def validar_id(id_str):
-    """Garante que o ID seja um número inteiro positivo válido."""
     if not id_str.isdigit():
         return False, "O ID deve conter apenas números inteiros!"
     val = int(id_str)
@@ -77,7 +73,7 @@ def carregar_dados():
         base_ativos = {}
 
 # ==========================================
-# INTERFACE GRÁFICA AJUSTADA (FUNDO PRETO) 🖥️
+# INTERFACE GRÁFICA COM ROLAGEM GERAL 🖥️
 # ==========================================
 class AplicacaoInventario(ctk.CTk):
     def __init__(self):
@@ -85,19 +81,20 @@ class AplicacaoInventario(ctk.CTk):
 
         self.title("UFU - CIBERSEGURANÇA 🔒")
         self.geometry("760x840")
-        
-        # ⬛ Definição da cor de fundo principal da janela como PRETO
         self.configure(fg_color="black")
         
-        # Permitir redimensionamento livre
         self.resizable(True, True)
         self.minsize(650, 600)
 
         carregar_dados()
 
-        # Cabeçalho com o novo nome
-        self.header_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#121212", border_width=1, border_color="#262626")
-        self.header_frame.pack(pady=10, padx=15, fill="x")
+        # 📜 FRAME DE ROLAGEM PRINCIPAL (Garante rolagem em zoom alto)
+        self.scroll_container = ctk.CTkScrollableFrame(self, fg_color="black", bg_color="black")
+        self.scroll_container.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Cabeçalho
+        self.header_frame = ctk.CTkFrame(self.scroll_container, corner_radius=10, fg_color="#121212", border_width=1, border_color="#262626")
+        self.header_frame.pack(pady=10, padx=10, fill="x")
 
         self.titulo = ctk.CTkLabel(
             self.header_frame, 
@@ -107,7 +104,7 @@ class AplicacaoInventario(ctk.CTk):
         )
         self.titulo.pack(side="left", padx=15, pady=12)
 
-        # 🔍 Controle de Zoom / Proporção
+        # 🔍 Controle de Zoom
         self.frame_zoom = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.frame_zoom.pack(side="right", padx=15)
 
@@ -125,8 +122,8 @@ class AplicacaoInventario(ctk.CTk):
         self.combo_zoom.pack(side="left")
 
         # Sistema de Abas
-        self.tabview = ctk.CTkTabview(self, corner_radius=10, fg_color="#09090b", segmented_button_fg_color="#18181b", segmented_button_selected_color="#2563eb")
-        self.tabview.pack(pady=5, padx=15, fill="both", expand=True)
+        self.tabview = ctk.CTkTabview(self.scroll_container, corner_radius=10, fg_color="#09090b", segmented_button_fg_color="#18181b", segmented_button_selected_color="#2563eb")
+        self.tabview.pack(pady=5, padx=10, fill="both", expand=True)
 
         self.tab_ativos = self.tabview.add("💻 Gestão de Ativos")
         self.tab_cve = self.tabview.add("⚠️ Vulnerabilidades")
@@ -138,7 +135,7 @@ class AplicacaoInventario(ctk.CTk):
         self.setup_aba_relatorio()
 
         # Barra de Status
-        self.lbl_status = ctk.CTkLabel(self, text="🔒 Sistema UFU - Cibersegurança pronto.", font=("Segoe UI", 11, "bold"), text_color="#9ca3af")
+        self.lbl_status = ctk.CTkLabel(self.scroll_container, text="🔒 Sistema UFU - Cibersegurança pronto.", font=("Segoe UI", 11, "bold"), text_color="#9ca3af")
         self.lbl_status.pack(pady=8)
 
         self.func_atualizar_relatorio()
@@ -154,7 +151,7 @@ class AplicacaoInventario(ctk.CTk):
     # LAYOUT DAS ABAS
     # ----------------------------------------------------
     def setup_aba_ativos(self):
-        # Frame de Seleção de Ativo para Alteração 🔍
+        # Seleção de Ativo
         frame_select = ctk.CTkFrame(self.tab_ativos, corner_radius=8, fg_color="#121212", border_width=1, border_color="#262626")
         frame_select.pack(pady=5, padx=10, fill="x")
 
@@ -178,7 +175,7 @@ class AplicacaoInventario(ctk.CTk):
         self.btn_limpar_form = ctk.CTkButton(sub_select, text="Novo / Limpar 🧹", fg_color="#3f3f46", hover_color="#52525b", width=110, command=self.func_limpar_formulario)
         self.btn_limpar_form.pack(side="left", padx=5)
 
-        # Frame de Cadastro / Alteração
+        # Cadastro / Alteração
         frame_cad = ctk.CTkFrame(self.tab_ativos, corner_radius=8, fg_color="#121212", border_width=1, border_color="#262626")
         frame_cad.pack(pady=5, padx=10, fill="x")
 
@@ -203,7 +200,7 @@ class AplicacaoInventario(ctk.CTk):
         self.btn_salvar = ctk.CTkButton(frame_cad, text="Salvar Ativo 💾", fg_color="#2563eb", hover_color="#1d4ed8", command=self.func_cadastrar_ativo)
         self.btn_salvar.pack(pady=10)
 
-        # Frame de Remoção
+        # Remoção
         frame_del = ctk.CTkFrame(self.tab_ativos, corner_radius=8, fg_color="#121212", border_width=1, border_color="#262626")
         frame_del.pack(pady=5, padx=10, fill="x")
 
@@ -263,15 +260,14 @@ class AplicacaoInventario(ctk.CTk):
         self.btn_limpar_busca = ctk.CTkButton(frame_busca, text="Limpar ✖", width=90, fg_color="#27272a", hover_color="#3f3f46", command=self.func_limpar_busca)
         self.btn_limpar_busca.pack(side="right")
 
-        self.caixa_relatorio = ctk.CTkTextbox(self.tab_relatorio, font=("Consolas", 12), fg_color="#121212", text_color="#e4e4e7", border_width=1, border_color="#262626")
+        self.caixa_relatorio = ctk.CTkTextbox(self.tab_relatorio, height=350, font=("Consolas", 12), fg_color="#121212", text_color="#e4e4e7", border_width=1, border_color="#262626")
         self.caixa_relatorio.pack(pady=5, padx=5, fill="both", expand=True)
         self.caixa_relatorio.configure(state="disabled")
 
     # ----------------------------------------------------
-    # REGRAS DE SELEÇÃO E EDICAO DE ATIVOS ✏️
+    # REGRAS DE SELEÇÃO E EDIÇÃO DE ATIVOS ✏️
     # ----------------------------------------------------
     def func_atualizar_menu_selecao(self):
-        """Atualiza a lista suspensa com os ativos cadastrados."""
         if not base_ativos:
             opcoes = ["Nenhum ativo cadastrado"]
         else:
@@ -281,7 +277,6 @@ class AplicacaoInventario(ctk.CTk):
         self.combo_selecionar_ativo.set(opcoes[0])
 
     def func_carregar_dados_ativo(self):
-        """Carrega os dados do ativo selecionado nos campos de texto para edição."""
         item_selecionado = self.combo_selecionar_ativo.get()
 
         if item_selecionado == "Nenhum ativo cadastrado" or not item_selecionado:
@@ -312,7 +307,6 @@ class AplicacaoInventario(ctk.CTk):
             self.lbl_status.configure(text=f"📥 Dados do Ativo ID {id_val} carregados para edição.", text_color="#60a5fa")
 
     def func_limpar_formulario(self):
-        """Reseta os campos do formulário para modo de cadastro."""
         self.entry_id.configure(state="normal")
         self.entry_id.delete(0, 'end')
         self.entry_hostname.delete(0, 'end')
