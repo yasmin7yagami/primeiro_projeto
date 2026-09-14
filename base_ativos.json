@@ -88,7 +88,19 @@
                 "cve": "CVE-2026-1478",
                 "severidade": "Crítica",
                 "status": "Em Análise"
+            },
+            {
+                "cve": "CVE-2026-1478",
+                "severidade": "Alta",
+                "status": "Corrigida"
             }
         ]
+    },
+    "123369": {
+        "hostname": "hostnovo",
+        "responsavel": "yasmin",
+        "localizacao": "sala t30",
+        "tipo": "IMPRESSORAS",
+        "vulnerabilidades": []
     }
 }
