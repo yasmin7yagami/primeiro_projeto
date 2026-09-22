@@ -1,0 +1,32 @@
+{
+    "admin": {
+        "hash": "ddb37d83a3c9cf6b628f19e52b29d126$017a0cdab31ed6341c74823a8cf9f22e56419967fffc38444c0e3c612843fff1",
+        "nome": "Administrador UFU",
+        "role": "admin"
+    },
+    "yas": {
+        "hash": "d614244608ff1035bec7b0aabd193b91$5e367cb2f5cd94f218ec8306400b894ddae007cfd76267ebae5e30e4e40dbbe8",
+        "nome": "yasmin",
+        "role": "user"
+    },
+    "manda": {
+        "hash": "f06ef446342dee9585bd5cb7814b5377$cfa77c353f952ee07cedf311ef457bed23d042aa7a9e4774c0bf589af7ebc37c",
+        "nome": "amanda",
+        "role": "admin"
+    },
+    "cami": {
+        "hash": "33d86c6f4d6c412b424ae92f2f2c54c2$6c04ff18183ce29a97ad43c983ce98fbc77ae5bb91cb4b88042d488f8d8a639a",
+        "nome": "camila",
+        "role": "user"
+    },
+    "igor": {
+        "hash": "b90415249de42fe09d5527018dede1e3$bd819a88fac792c3b25786b71aa8ff8f4e2c7bb44be46186fd74f357c06dbf8c",
+        "nome": "igor",
+        "role": "user"
+    },
+    "elaine": {
+        "hash": "1929dcbf423bee9357328dd09a355078$8819f3ab41be417ca5b1517e5a0199542c20d1bd88e403043f2a2ff556d6de30",
+        "nome": "elaine",
+        "role": "admin"
+    }
+}
