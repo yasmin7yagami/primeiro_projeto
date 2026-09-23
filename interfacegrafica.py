@@ -1520,8 +1520,13 @@ class AplicacaoInventario(ctk.CTk):
             self.tree_frame, columns=cols, show="headings", height=12
         )
 
+        # Configuração do cabeçalho com evento de ordenação ao clicar 🔃
         for col in cols:
-            self.tree.heading(col, text=col)
+            self.tree.heading(
+                col,
+                text=col,
+                command=lambda _col=col: self.func_ordenar_coluna(_col, False),
+            )
             self.tree.column(col, anchor="center", width=120)
 
         self.tree.column("ID", width=60)
@@ -1537,6 +1542,27 @@ class AplicacaoInventario(ctk.CTk):
 
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+    def func_ordenar_coluna(self, col, reverse):
+        # Obtém todos os itens da tabela
+        lista_itens = [
+            (self.tree.set(k, col), k) for k in self.tree.get_children("")
+        ]
+
+        # Ordena numericamente se for possível (ex: ID), senão ordena alfabeticamente
+        try:
+            lista_itens.sort(key=lambda x: int(x[0]), reverse=reverse)
+        except ValueError:
+            lista_itens.sort(key=lambda x: x[0].lower(), reverse=reverse)
+
+        # Reorganiza os itens na tabela
+        for index, (val, k) in enumerate(lista_itens):
+            self.tree.move(k, "", index)
+
+        # Inverte o sentido no próximo clique
+        self.tree.heading(
+            col, command=lambda: self.func_ordenar_coluna(col, not reverse)
+        )
 
     def func_ao_dar_duplo_clique(self, event):
         item_selecionado = self.tree.selection()
