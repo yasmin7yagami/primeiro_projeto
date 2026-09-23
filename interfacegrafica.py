@@ -1363,6 +1363,7 @@ class AplicacaoInventario(ctk.CTk):
             command=self.func_vincular_cve,
         ).pack(side="left", padx=5)
 
+        # Caixa de texto com quebra automática de linha por palavras 🔤
         self.txt_cve_info = ctk.CTkTextbox(
             frame_cve,
             width=550,
@@ -1370,6 +1371,7 @@ class AplicacaoInventario(ctk.CTk):
             fg_color="#05070a",
             border_color=COR_BORDA,
             border_width=1,
+            wrap="word",  # Permite que o texto do NVD se ajuste sem cortar palavras
         )
         self.txt_cve_info.pack(pady=10)
         self.txt_cve_info.insert(
@@ -1520,46 +1522,63 @@ class AplicacaoInventario(ctk.CTk):
             self.tree_frame, columns=cols, show="headings", height=12
         )
 
-        # Configuração do cabeçalho com evento de ordenação ao clicar 🔃
+        # Larguras personalizadas para evitar cortes de texto
+        larguras = {
+            "ID": 70,
+            "Hostname": 150,
+            "Tipo": 140,
+            "Responsável": 160,
+            "Localização": 180,
+            "Vulnerabilidades": 280,
+        }
+
+        # Configuração dos cabeçalhos com ordenação ao clicar 🔃
         for col in cols:
             self.tree.heading(
                 col,
                 text=col,
                 command=lambda _col=col: self.func_ordenar_coluna(_col, False),
             )
-            self.tree.column(col, anchor="center", width=120)
+            self.tree.column(
+                col, anchor="center", width=larguras.get(col, 120), minwidth=80
+            )
 
-        self.tree.column("ID", width=60)
-        self.tree.column("Vulnerabilidades", width=180)
-
-        # Mapeia o duplo clique com o botão esquerdo do rato na tabela 🖱️
+        # Duplo clique na tabela 🖱️
         self.tree.bind("<Double-1>", self.func_ao_dar_duplo_clique)
 
-        scrollbar = ttk.Scrollbar(
+        # Barras de rolagem (Vertical e Horizontal) 📜
+        scroll_y = ttk.Scrollbar(
             self.tree_frame, orient="vertical", command=self.tree.yview
         )
-        self.tree.configure(yscroll=scrollbar.set)
+        scroll_x = ttk.Scrollbar(
+            self.tree_frame, orient="horizontal", command=self.tree.xview
+        )
 
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree.configure(
+            yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set
+        )
+
+        # Posicionamento com grid para suportar as duas barras 📐
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
+
+        self.tree_frame.grid_rowconfigure(0, weight=1)
+        self.tree_frame.grid_columnconfigure(0, weight=1)
 
     def func_ordenar_coluna(self, col, reverse):
-        # Obtém todos os itens da tabela
         lista_itens = [
             (self.tree.set(k, col), k) for k in self.tree.get_children("")
         ]
 
-        # Ordena numericamente se for possível (ex: ID), senão ordena alfabeticamente
         try:
             lista_itens.sort(key=lambda x: int(x[0]), reverse=reverse)
         except ValueError:
             lista_itens.sort(key=lambda x: x[0].lower(), reverse=reverse)
 
-        # Reorganiza os itens na tabela
         for index, (val, k) in enumerate(lista_itens):
             self.tree.move(k, "", index)
 
-        # Inverte o sentido no próximo clique
         self.tree.heading(
             col, command=lambda: self.func_ordenar_coluna(col, not reverse)
         )
