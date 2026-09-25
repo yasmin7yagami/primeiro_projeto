@@ -109,7 +109,7 @@ def traduzir_texto(texto_ingles):
             texto_ingles
         )
     except Exception:
-        return texto_ingles  # Se falhar a tradução, devolve em inglês
+        return texto_ingles
 
 
 # ==========================================
@@ -181,20 +181,17 @@ def traduzir_severidade(cvss_score):
 def consultar_cve_nvd(codigo_cve):
     codigo_limpo = codigo_cve.strip().upper()
 
-    # 1. Validação Prévia 🔍
     if not validar_cve(codigo_limpo):
         return {
             "erro": "Formato de CVE inválido! Use o padrão: CVE-AAAA-NNNN (ex: CVE-2021-44228)"
         }
 
-    # 2. Busca no Cache Local 💾
     cves_locais = carregar_cves_locais()
     if codigo_limpo in cves_locais:
         dados_cache = cves_locais[codigo_limpo]
         dados_cache["origem"] = "local"
         return dados_cache
 
-    # 3. Consulta à API da NVD 🌐
     url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={codigo_limpo}"
     headers = {"User-Agent": "MeuAppPython/1.0"}
 
@@ -226,7 +223,6 @@ def consultar_cve_nvd(codigo_cve):
                 else "N/A"
             )
 
-            # 4. Tradução Automática para Português 🔤
             descricao_pt = traduzir_texto(descricao_en)
 
             estrutura_cve = {
@@ -237,7 +233,6 @@ def consultar_cve_nvd(codigo_cve):
                 "origem": "api",
             }
 
-            # 5. Guarda no Cache Local para futuras pesquisas 💾
             guardar_cve_local(codigo_limpo, estrutura_cve)
 
             return estrutura_cve
@@ -1368,6 +1363,7 @@ class AplicacaoInventario(ctk.CTk):
             command=self.func_vincular_cve,
         ).pack(side="left", padx=5)
 
+        # Caixa de texto com quebra automática de linha por palavras 🔤
         self.txt_cve_info = ctk.CTkTextbox(
             frame_cve,
             width=550,
@@ -1375,6 +1371,7 @@ class AplicacaoInventario(ctk.CTk):
             fg_color="#05070a",
             border_color=COR_BORDA,
             border_width=1,
+            wrap="word",  # Permite que o texto do NVD se ajuste sem cortar palavras
         )
         self.txt_cve_info.pack(pady=10)
         self.txt_cve_info.insert(
@@ -1396,7 +1393,6 @@ class AplicacaoInventario(ctk.CTk):
         )
         self.update_idletasks()
 
-        # Executa o fluxo unificado (Validação -> Cache Local -> API -> Tradução -> Salvar)
         dados = consultar_cve_nvd(cve_code)
         self.txt_cve_info.delete("1.0", "end")
 
@@ -1424,7 +1420,7 @@ class AplicacaoInventario(ctk.CTk):
         else:
             self.txt_cve_info.insert("1.0", f"❌ Erro: {dados['erro']}")
             self.lbl_status.configure(
-                text=f"❌ Erro na consulta.", text_color="#ef4444"
+                text="❌ Erro na consulta.", text_color="#ef4444"
             )
 
     def func_vincular_cve(self):
@@ -1526,20 +1522,77 @@ class AplicacaoInventario(ctk.CTk):
             self.tree_frame, columns=cols, show="headings", height=12
         )
 
+        # Larguras personalizadas para evitar cortes de texto
+        larguras = {
+            "ID": 70,
+            "Hostname": 150,
+            "Tipo": 140,
+            "Responsável": 160,
+            "Localização": 180,
+            "Vulnerabilidades": 280,
+        }
+
+        # Configuração dos cabeçalhos com ordenação ao clicar 🔃
         for col in cols:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, anchor="center", width=120)
+            self.tree.heading(
+                col,
+                text=col,
+                command=lambda _col=col: self.func_ordenar_coluna(_col, False),
+            )
+            self.tree.column(
+                col, anchor="center", width=larguras.get(col, 120), minwidth=80
+            )
 
-        self.tree.column("ID", width=60)
-        self.tree.column("Vulnerabilidades", width=180)
+        # Duplo clique na tabela 🖱️
+        self.tree.bind("<Double-1>", self.func_ao_dar_duplo_clique)
 
-        scrollbar = ttk.Scrollbar(
+        # Barras de rolagem (Vertical e Horizontal) 📜
+        scroll_y = ttk.Scrollbar(
             self.tree_frame, orient="vertical", command=self.tree.yview
         )
-        self.tree.configure(yscroll=scrollbar.set)
+        scroll_x = ttk.Scrollbar(
+            self.tree_frame, orient="horizontal", command=self.tree.xview
+        )
 
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree.configure(
+            yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set
+        )
+
+        # Posicionamento com grid para suportar as duas barras 📐
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
+
+        self.tree_frame.grid_rowconfigure(0, weight=1)
+        self.tree_frame.grid_columnconfigure(0, weight=1)
+
+    def func_ordenar_coluna(self, col, reverse):
+        lista_itens = [
+            (self.tree.set(k, col), k) for k in self.tree.get_children("")
+        ]
+
+        try:
+            lista_itens.sort(key=lambda x: int(x[0]), reverse=reverse)
+        except ValueError:
+            lista_itens.sort(key=lambda x: x[0].lower(), reverse=reverse)
+
+        for index, (val, k) in enumerate(lista_itens):
+            self.tree.move(k, "", index)
+
+        self.tree.heading(
+            col, command=lambda: self.func_ordenar_coluna(col, not reverse)
+        )
+
+    def func_ao_dar_duplo_clique(self, event):
+        item_selecionado = self.tree.selection()
+        if not item_selecionado:
+            return
+
+        valores_linha = self.tree.item(item_selecionado, "values")
+        if valores_linha:
+            id_ativo = int(valores_linha[0])
+            self.carregar_ativo_por_id(id_ativo)
+            self.tabview.set("✏️ Atualizar / Remover Ativo")
 
     def func_limpar_busca(self):
         self.entry_busca.delete(0, "end")
@@ -1555,11 +1608,22 @@ class AplicacaoInventario(ctk.CTk):
         termo = self.entry_busca.get().strip().lower()
 
         for id_ativo, info in sorted(base_ativos.items()):
-            vuls_str = (
-                ", ".join(info.get("vulnerabilidades", []))
-                if info.get("vulnerabilidades")
-                else "Nenhuma"
-            )
+            vulnerabilidades = info.get("vulnerabilidades", [])
+            lista_vuls = []
+
+            for v in vulnerabilidades:
+                if isinstance(v, dict):
+                    val = (
+                        v.get("id")
+                        or v.get("cve")
+                        or v.get("nome")
+                        or str(v)
+                    )
+                    lista_vuls.append(str(val))
+                else:
+                    lista_vuls.append(str(v))
+
+            vuls_str = ", ".join(lista_vuls) if lista_vuls else "Nenhuma"
 
             if termo:
                 match_id = termo in str(id_ativo)

@@ -75,7 +75,8 @@
                 "cve": "CVE-2026-123654",
                 "severidade": "Média",
                 "status": "Em Correção"
-            }
+            },
+            "CVE-2021-44228"
         ]
     },
     "1254": {
