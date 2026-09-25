@@ -76,7 +76,12 @@
                 "severidade": "Média",
                 "status": "Em Correção"
             },
+<<<<<<< Updated upstream
             "CVE-2021-44228"
+=======
+            "CVE-1234-1234",
+            "CVE-2022-22965"
+>>>>>>> Stashed changes
         ]
     },
     "1254": {
