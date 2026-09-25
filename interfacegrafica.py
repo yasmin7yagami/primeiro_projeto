@@ -909,7 +909,7 @@ class AplicacaoInventario(ctk.CTk):
             self.lbl_status.configure(text=f"❌ {msg}", text_color="#ef4444")
 
     # ==========================================
-    # 1. CADASTRO DE NOVO ATIVO
+    #  CADASTRO DE NOVO ATIVO
     # ==========================================
     def setup_aba_cadastrar(self):
         frame_cad = ctk.CTkFrame(
@@ -1034,7 +1034,7 @@ class AplicacaoInventario(ctk.CTk):
         self.cad_entry_localizacao.delete(0, "end")
 
     # ==========================================
-    # 2. ATUALIZAÇÃO E REMOÇÃO DE ATIVO
+    #  ATUALIZAÇÃO E REMOÇÃO DE ATIVO
     # ==========================================
     def setup_aba_atualizar(self):
         frame_select = ctk.CTkFrame(
@@ -1304,7 +1304,7 @@ class AplicacaoInventario(ctk.CTk):
             self.func_atualizar_menu_selecao()
 
     # ==========================================
-    # 3. ABA DE GESTÃO DE VULNERABILIDADES (CVE)
+    # ABA DE GESTÃO DE VULNERABILIDADES (CVE)
     # ==========================================
     def setup_aba_cve(self):
         frame_cve = ctk.CTkFrame(
@@ -1393,6 +1393,10 @@ class AplicacaoInventario(ctk.CTk):
         )
         self.update_idletasks()
 
+<<<<<<< Updated upstream
+=======
+       
+>>>>>>> Stashed changes
         dados = consultar_cve_nvd(cve_code)
         self.txt_cve_info.delete("1.0", "end")
 
@@ -1432,8 +1436,13 @@ class AplicacaoInventario(ctk.CTk):
             return
 
         cve_code = self.cve_entry_codigo.get().strip().upper()
-        if not validar_cve(cve_code):
-            messagebox.showerror("Erro", "Formato de CVE inválido!")
+
+     
+        dados = consultar_cve_nvd(cve_code)
+        if "erro" in dados:
+            messagebox.showerror(
+                "Erro de Validação", f"Não foi possível vincular: {dados['erro']}"
+            )
             return
 
         if cve_code in base_ativos[res_id]["vulnerabilidades"]:
@@ -1450,9 +1459,8 @@ class AplicacaoInventario(ctk.CTk):
             text_color=COR_TEXTO_VERDE,
         )
         self.func_atualizar_relatorio()
-
     # ==========================================
-    # 4. ABA DE RELATÓRIO E BUSCA
+    #  ABA DE RELATÓRIO E BUSCA
     # ==========================================
     def setup_aba_relatorio(self):
         frame_busca = ctk.CTkFrame(
@@ -1608,6 +1616,7 @@ class AplicacaoInventario(ctk.CTk):
         termo = self.entry_busca.get().strip().lower()
 
         for id_ativo, info in sorted(base_ativos.items()):
+<<<<<<< Updated upstream
             vulnerabilidades = info.get("vulnerabilidades", [])
             lista_vuls = []
 
@@ -1624,6 +1633,20 @@ class AplicacaoInventario(ctk.CTk):
                     lista_vuls.append(str(v))
 
             vuls_str = ", ".join(lista_vuls) if lista_vuls else "Nenhuma"
+=======
+            vuls_list = info.get("vulnerabilidades", [])
+            if vuls_list:
+                # Extracts a specific key (like 'cve' or 'nome') if it's a dict, 
+                # otherwise converts the dictionary safely to a string
+                vuls_str = ", ".join(
+                    [
+                        str(v.get("cve", v.get("nome", v))) if isinstance(v, dict) else str(v)
+                        for v in vuls_list
+                    ]
+                )
+            else:
+                vuls_str = "Nenhuma"
+>>>>>>> Stashed changes
 
             if termo:
                 match_id = termo in str(id_ativo)
@@ -1653,19 +1676,33 @@ class AplicacaoInventario(ctk.CTk):
                     vuls_str,
                 ),
             )
-
-
 # ==========================================
 # 🚀 PONTO DE ENTRADA DO APLICATIVO
 # ==========================================
 def iniciar_aplicacao():
+    dados_sessao = {}
 
     def callback_login_sucesso(nome_usuario, role_usuario, login_id):
-        app = AplicacaoInventario(nome_usuario, role_usuario, login_id)
-        app.mainloop()
+        
+        dados_sessao["usuario"] = nome_usuario
+        dados_sessao["role"] = role_usuario
+        dados_sessao["id"] = login_id
+        
+       
+        login_app.destroy()
 
+  
     login_app = JanelaLogin(callback_login_sucesso)
     login_app.mainloop()
+
+   
+    if dados_sessao:
+        app = AplicacaoInventario(
+            dados_sessao["usuario"], 
+            dados_sessao["role"], 
+            dados_sessao["id"]
+        )
+        app.mainloop()
 
 
 if __name__ == "__main__":
