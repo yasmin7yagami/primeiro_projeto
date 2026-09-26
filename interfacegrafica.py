@@ -584,7 +584,7 @@ class AplicacaoInventario(ctk.CTk):
         )
         ctk.CTkLabel(
             self.frame_top_right,
-            text=f"👤 {self.usuario_logado} ({self.role_logado.upper()})",
+            text=f"👤 {self.usuario_logado} {self.role_logado.upper()})",
             font=("Segoe UI", 12, "bold"),
             text_color=badge_color,
         ).pack(side="left", padx=(0, 10))
@@ -914,7 +914,7 @@ class AplicacaoInventario(ctk.CTk):
             self.lbl_status.configure(text=f"❌ {msg}", text_color="#ef4444")
 
     # ==========================================
-    # 1. CADASTRO DE NOVO ATIVO
+    #  CADASTRO DE NOVO ATIVO
     # ==========================================
     def setup_aba_cadastrar(self):
         frame_cad = ctk.CTkFrame(
@@ -1309,7 +1309,7 @@ class AplicacaoInventario(ctk.CTk):
             self.func_atualizar_menu_selecao()
 
     # ==========================================
-    # 3. ABA DE GESTÃO DE VULNERABILIDADES (CVE)
+    # ABA DE GESTÃO DE VULNERABILIDADES (CVE)
     # ==========================================
     def setup_aba_cve(self):
         frame_cve = ctk.CTkFrame(
@@ -1456,7 +1456,7 @@ class AplicacaoInventario(ctk.CTk):
         self.func_atualizar_relatorio()
 
     # ==========================================
-    # 4. ABA DE RELATÓRIO E BUSCA
+    #  ABA DE RELATÓRIO E BUSCA
     # ==========================================
     def setup_aba_relatorio(self):
         frame_busca = ctk.CTkFrame(
@@ -1555,11 +1555,18 @@ class AplicacaoInventario(ctk.CTk):
         termo = self.entry_busca.get().strip().lower()
 
         for id_ativo, info in sorted(base_ativos.items()):
-            vuls_str = (
-                ", ".join(info.get("vulnerabilidades", []))
-                if info.get("vulnerabilidades")
-                else "Nenhuma"
-            )
+            vuls_list = info.get("vulnerabilidades", [])
+            if vuls_list:
+                # Extracts a specific key (like 'cve' or 'nome') if it's a dict, 
+                # otherwise converts the dictionary safely to a string
+                vuls_str = ", ".join(
+                    [
+                        str(v.get("cve", v.get("nome", v))) if isinstance(v, dict) else str(v)
+                        for v in vuls_list
+                    ]
+                )
+            else:
+                vuls_str = "Nenhuma"
 
             if termo:
                 match_id = termo in str(id_ativo)
