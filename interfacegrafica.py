@@ -1341,6 +1341,10 @@ class AplicacaoInventario(ctk.CTk):
         )
         self.cve_entry_codigo.pack(pady=5)
 
+        # Configura navegação por Enter nos campos de entrada da aba CVE
+        self.cve_entry_id.bind("<Return>", lambda e: self.cve_entry_codigo.focus())
+        self.cve_entry_codigo.bind("<Return>", lambda e: self.func_buscar_cve_api())
+
         frame_btns_cve = ctk.CTkFrame(frame_cve, fg_color="transparent")
         frame_btns_cve.pack(pady=10)
 
@@ -1363,7 +1367,7 @@ class AplicacaoInventario(ctk.CTk):
             command=self.func_vincular_cve,
         ).pack(side="left", padx=5)
 
-        # Caixa de texto com quebra automática de linha por palavras 🔤
+        # Caixa de texto com quebra automática de linha por palavras
         self.txt_cve_info = ctk.CTkTextbox(
             frame_cve,
             width=550,
@@ -1371,7 +1375,7 @@ class AplicacaoInventario(ctk.CTk):
             fg_color="#05070a",
             border_color=COR_BORDA,
             border_width=1,
-            wrap="word",  # Permite que o texto do NVD se ajuste sem cortar palavras
+            wrap="word",
         )
         self.txt_cve_info.pack(pady=10)
         self.txt_cve_info.insert(
@@ -1393,10 +1397,6 @@ class AplicacaoInventario(ctk.CTk):
         )
         self.update_idletasks()
 
-<<<<<<< Updated upstream
-=======
-       
->>>>>>> Stashed changes
         dados = consultar_cve_nvd(cve_code)
         self.txt_cve_info.delete("1.0", "end")
 
@@ -1428,39 +1428,51 @@ class AplicacaoInventario(ctk.CTk):
             )
 
     def func_vincular_cve(self):
+        # 1. Validar ID do Ativo
         valido, res_id = validar_id(self.cve_entry_id.get().strip())
         if not valido or res_id not in base_ativos:
             messagebox.showerror(
-                "Erro", "ID de ativo inválido ou não encontrado!"
+                "Erro de Ativo", "ID de ativo inválido ou não encontrado na base!"
             )
             return
 
         cve_code = self.cve_entry_codigo.get().strip().upper()
 
-     
+        # 2. Validar se o formato da string é um formato CVE válido (ex: CVE-2021-44228)
+        if not validar_cve(cve_code):
+            messagebox.showerror(
+                "Formato Inválido",
+                "Código CVE com formato inválido!\nUse o padrão: CVE-AAAA-NNNNN (ex: CVE-2021-44228)"
+            )
+            return
+
+        # 3. Consultar a API/Cache para verificar se a CVE realmente existe
         dados = consultar_cve_nvd(cve_code)
         if "erro" in dados:
             messagebox.showerror(
-                "Erro de Validação", f"Não foi possível vincular: {dados['erro']}"
+                "CVE Não Encontrada",
+                f"A CVE '{cve_code}' não pôde ser vinculada:\n{dados['erro']}"
             )
             return
 
+        # 4. Verificar se a CVE já está vinculada a este ativo específico
         if cve_code in base_ativos[res_id]["vulnerabilidades"]:
             messagebox.showwarning(
-                "Aviso", "Esta CVE já está vinculada a este ativo."
+                "Duplicidade", f"A {cve_code} já está vinculada ao ativo ID {res_id}."
             )
             return
 
+        # 5. Vinculação confirmada para CVE válida
         base_ativos[res_id]["vulnerabilidades"].append(cve_code)
         salvar_dados_ativos()
 
         self.lbl_status.configure(
-            text=f"✅ {cve_code} vinculada ao Ativo ID {res_id}!",
+            text=f"✅ {cve_code} vinculada com sucesso ao Ativo ID {res_id}!",
             text_color=COR_TEXTO_VERDE,
         )
         self.func_atualizar_relatorio()
-    # ==========================================
-    #  ABA DE RELATÓRIO E BUSCA
+   # ==========================================
+    # 🚀 ABA DE RELATÓRIO E BUSCA (COMPLETA)
     # ==========================================
     def setup_aba_relatorio(self):
         frame_busca = ctk.CTkFrame(
@@ -1472,6 +1484,7 @@ class AplicacaoInventario(ctk.CTk):
         )
         frame_busca.pack(pady=10, padx=15, fill="x")
 
+        # Campo de entrada para o filtro
         self.entry_busca = ctk.CTkEntry(
             frame_busca,
             placeholder_text=(
@@ -1482,10 +1495,15 @@ class AplicacaoInventario(ctk.CTk):
             border_color=COR_BORDA,
         )
         self.entry_busca.pack(side="left", padx=10, pady=10)
+        
+        # Eventos e atalhos na barra de busca ⌨️
         self.entry_busca.bind(
             "<KeyRelease>", lambda e: self.func_atualizar_relatorio()
         )
+        self.entry_busca.bind("<Escape>", lambda e: self.func_limpar_busca())
+        self.entry_busca.bind("<Return>", lambda e: self.focus())
 
+        # Botão Limpar Filtro
         ctk.CTkButton(
             frame_busca,
             text="Limpar Filtro 🧹",
@@ -1495,6 +1513,18 @@ class AplicacaoInventario(ctk.CTk):
             command=self.func_limpar_busca,
         ).pack(side="left", padx=5)
 
+        # Botão Ver Detalhes 🔍
+        ctk.CTkButton(
+            frame_busca,
+            text="Ver Detalhes 🔍",
+            fg_color=COR_VERDE_NEON,
+            hover_color=COR_VERDE_HOVER,
+            text_color="#022c22",
+            width=130,
+            command=self.func_exibir_detalhes_ativo,
+        ).pack(side="left", padx=5)
+
+        # Estilo da Tabela Treeview
         style = ttk.Style()
         style.theme_use("default")
         style.configure(
@@ -1530,7 +1560,7 @@ class AplicacaoInventario(ctk.CTk):
             self.tree_frame, columns=cols, show="headings", height=12
         )
 
-        # Larguras personalizadas para evitar cortes de texto
+        # Larguras personalizadas das colunas
         larguras = {
             "ID": 70,
             "Hostname": 150,
@@ -1540,7 +1570,6 @@ class AplicacaoInventario(ctk.CTk):
             "Vulnerabilidades": 280,
         }
 
-        # Configuração dos cabeçalhos com ordenação ao clicar 🔃
         for col in cols:
             self.tree.heading(
                 col,
@@ -1551,10 +1580,11 @@ class AplicacaoInventario(ctk.CTk):
                 col, anchor="center", width=larguras.get(col, 120), minwidth=80
             )
 
-        # Duplo clique na tabela 🖱️
+        # Ações do rato na tabela 🖱️
         self.tree.bind("<Double-1>", self.func_ao_dar_duplo_clique)
+        self.tree.bind("<Button-3>", lambda e: self.func_exibir_detalhes_ativo())
 
-        # Barras de rolagem (Vertical e Horizontal) 📜
+        # Barras de rolagem (Vertical e Horizontal)
         scroll_y = ttk.Scrollbar(
             self.tree_frame, orient="vertical", command=self.tree.yview
         )
@@ -1566,7 +1596,6 @@ class AplicacaoInventario(ctk.CTk):
             yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set
         )
 
-        # Posicionamento com grid para suportar as duas barras 📐
         self.tree.grid(row=0, column=0, sticky="nsew")
         scroll_y.grid(row=0, column=1, sticky="ns")
         scroll_x.grid(row=1, column=0, sticky="ew")
@@ -1574,6 +1603,9 @@ class AplicacaoInventario(ctk.CTk):
         self.tree_frame.grid_rowconfigure(0, weight=1)
         self.tree_frame.grid_columnconfigure(0, weight=1)
 
+    # ==========================================
+    # ⚙️ MÉTODOS AUXILIARES DO RELATÓRIO
+    # ==========================================
     def func_ordenar_coluna(self, col, reverse):
         lista_itens = [
             (self.tree.set(k, col), k) for k in self.tree.get_children("")
@@ -1606,6 +1638,98 @@ class AplicacaoInventario(ctk.CTk):
         self.entry_busca.delete(0, "end")
         self.func_atualizar_relatorio()
 
+    def func_exibir_detalhes_ativo(self):
+        item_selecionado = self.tree.selection()
+        if not item_selecionado:
+            messagebox.showwarning(
+                "Aviso", "Por favor, selecione um ativo na tabela para ver os detalhes!"
+            )
+            return
+
+        valores_linha = self.tree.item(item_selecionado, "values")
+        id_ativo = int(valores_linha[0])
+        ativo = base_ativos.get(id_ativo)
+
+        if not ativo:
+            messagebox.showerror("Erro", "Dados do ativo não encontrados!")
+            return
+
+        # Janela Modal / Popup de Detalhes
+        janela_detalhes = ctk.CTkToplevel(self)
+        janela_detalhes.title(f"🔍 Detalhes do Ativo - ID {id_ativo}")
+        janela_detalhes.geometry("520x450")
+        janela_detalhes.grab_set()
+
+        frame_detalhes = ctk.CTkFrame(
+            janela_detalhes,
+            corner_radius=8,
+            fg_color="#090d14",
+            border_width=1,
+            border_color=COR_BORDA,
+        )
+        frame_detalhes.pack(pady=15, padx=15, fill="both", expand=True)
+
+        ctk.CTkLabel(
+            frame_detalhes,
+            text=f"💻 {ativo.get('hostname', 'N/A')}",
+            font=("Segoe UI", 18, "bold"),
+            text_color=COR_TEXTO_DEST,
+        ).pack(pady=(10, 5))
+
+        info_texto = (
+            f"🆔 ID: {id_ativo}\n"
+            f"🏷️ Tipo: {ativo.get('tipo', 'N/A')}\n"
+            f"👤 Responsável: {ativo.get('responsavel', 'N/A')}\n"
+            f"📍 Localização: {ativo.get('localizacao', 'N/A')}\n"
+        )
+
+        ctk.CTkLabel(
+            frame_detalhes,
+            text=info_texto,
+            font=("Segoe UI", 12),
+            justify="left",
+        ).pack(anchor="w", padx=20, pady=5)
+
+        ctk.CTkLabel(
+            frame_detalhes,
+            text="⚠️ Vulnerabilidades Associadas:",
+            font=("Segoe UI", 12, "bold"),
+            text_color="#facc15",
+        ).pack(anchor="w", padx=20, pady=(10, 2))
+
+        txt_vuls = ctk.CTkTextbox(
+            frame_detalhes,
+            width=460,
+            height=180,
+            fg_color="#05070a",
+            border_color=COR_BORDA,
+            border_width=1,
+            wrap="word",
+        )
+        txt_vuls.pack(padx=20, pady=5, fill="both", expand=True)
+
+        vulnerabilidades = ativo.get("vulnerabilidades", [])
+        if not vulnerabilidades:
+            txt_vuls.insert("1.0", "Nenhuma vulnerabilidade vinculada a este ativo.")
+        else:
+            relatorio_vuls = ""
+            for cve in vulnerabilidades:
+                cve_info = cache_cve.get(cve, {})
+                cvss = cve_info.get("cvss", "N/A")
+                desc = cve_info.get("descricao", "Descrição não carregada no cache.")
+                relatorio_vuls += f"• {cve} (CVSS: {cvss})\n  {desc}\n\n"
+
+            txt_vuls.insert("1.0", relatorio_vuls.strip())
+
+        ctk.CTkButton(
+            frame_detalhes,
+            text="Fechar ❌",
+            fg_color="#ef4444",
+            hover_color="#dc2626",
+            width=100,
+            command=janela_detalhes.destroy,
+        ).pack(pady=10)
+
     def func_atualizar_relatorio(self):
         if not hasattr(self, "tree"):
             return
@@ -1616,7 +1740,6 @@ class AplicacaoInventario(ctk.CTk):
         termo = self.entry_busca.get().strip().lower()
 
         for id_ativo, info in sorted(base_ativos.items()):
-<<<<<<< Updated upstream
             vulnerabilidades = info.get("vulnerabilidades", [])
             lista_vuls = []
 
@@ -1633,20 +1756,6 @@ class AplicacaoInventario(ctk.CTk):
                     lista_vuls.append(str(v))
 
             vuls_str = ", ".join(lista_vuls) if lista_vuls else "Nenhuma"
-=======
-            vuls_list = info.get("vulnerabilidades", [])
-            if vuls_list:
-                # Extracts a specific key (like 'cve' or 'nome') if it's a dict, 
-                # otherwise converts the dictionary safely to a string
-                vuls_str = ", ".join(
-                    [
-                        str(v.get("cve", v.get("nome", v))) if isinstance(v, dict) else str(v)
-                        for v in vuls_list
-                    ]
-                )
-            else:
-                vuls_str = "Nenhuma"
->>>>>>> Stashed changes
 
             if termo:
                 match_id = termo in str(id_ativo)
@@ -1682,20 +1791,24 @@ class AplicacaoInventario(ctk.CTk):
 def iniciar_aplicacao():
     dados_sessao = {}
 
-    def callback_login_sucesso(nome_usuario, role_usuario, login_id):
+    def callback_login_sucesso(nome_usuario, role_usuario, usuario):
         
         dados_sessao["usuario"] = nome_usuario
         dados_sessao["role"] = role_usuario
-        dados_sessao["id"] = login_id
-        
-       
-        login_app.destroy()
+        dados_sessao["id"] = usuario
 
-  
+        
+        try:
+            if login_app and login_app.winfo_exists():
+                login_app.destroy()
+        except Exception:
+            pass
+
+    
     login_app = JanelaLogin(callback_login_sucesso)
     login_app.mainloop()
 
-   
+    
     if dados_sessao:
         app = AplicacaoInventario(
             dados_sessao["usuario"], 
