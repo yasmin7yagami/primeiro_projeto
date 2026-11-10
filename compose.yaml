@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trab02_app
+    restart: unless-stopped
+    volumes:
+      - dados_ativos:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "-m", "pytest", "tests/"]
+
+volumes:
+  dados_ativos:
+    driver: local
