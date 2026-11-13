@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UFU — Sistema de Inventário & Análise de Risco (Trabalho 02)</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- TELA DE LOGIN (MODAL / OVERLAY INICIAL) -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="shield-icon">🛡️</div>
+        <h2>UFU — CIBERSEGURANÇA</h2>
+        <p>Sistema de Gestão de Inventário & Análise de Risco</p>
+      </div>
+      <form id="form-login" onsubmit="event.preventDefault(); app.efetuarLogin();">
+        <div class="form-group">
+          <label for="login-usuario">Usuário / Identificador</label>
+          <input type="text" id="login-usuario" placeholder="Ex: admin ou yas" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-senha">Senha de Acesso</label>
+          <input type="password" id="login-senha" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Acessar Sistema 🔐</button>
+      </form>
+      <div class="login-footer">
+        <small>Padrão inicial: <strong>admin</strong> / <strong>admin123</strong></small>
+      </div>
+    </div>
+  </div>
+
+  <!-- APLICAÇÃO PRINCIPAL (NAVBAR + CORPO) -->
+  <div id="app-container" class="app-container" style="display: none;">
+
+    <!-- TOPO / CABEÇALHO -->
+    <header class="app-header">
+      <div class="header-brand">
+        <span class="brand-icon">🛡️</span>
+        <div>
+          <h1>UFU — CIBERSEGURANÇA</h1>
+          <span class="header-subtitle">Aplicação de Inventário OO & Análise de Risco Linear (Trabalho 02)</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <span id="badge-container" class="badge badge-success">● CONTAINER 24H ONLINE</span>
+        <div class="user-pill">
+          <span id="header-user-name">👤 Usuário</span>
+          <span id="header-user-role" class="badge badge-role">USER</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="app.abrirModalSenha()">Senha 🔑</button>
+        <button class="btn btn-danger btn-sm" onclick="app.efetuarLogout()">Sair 🚪</button>
+      </div>
+    </header>
+
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <nav class="app-nav">
+      <button class="nav-tab active" onclick="app.mudarAba('dashboard')">📊 Relatório & Álgebra Linear</button>
+      <button class="nav-tab" onclick="app.mudarAba('cadastrar')">➕ Novo Ativo</button>
+      <button class="nav-tab" onclick="app.mudarAba('atualizar')">✏️ Gerenciar Ativos</button>
+      <button class="nav-tab" onclick="app.mudarAba('vulnerabilidades')">⚠️ Vulnerabilidades & NVD</button>
+      <button id="tab-btn-usuarios" class="nav-tab" onclick="app.mudarAba('usuarios')" style="display: none;">👥 Gestão de Usuários</button>
+    </nav>
+
+    <!-- CONTEÚDO DAS ABAS -->
+    <main class="app-content">
+
+      <!-- ABA 1: DASHBOARD & ÁLGEBRA LINEAR -->
+      <section id="aba-dashboard" class="tab-pane active">
+        <!-- CARDS DE MÉTRICAS -->
+        <div class="metrics-grid">
+          <div class="card metric-card">
+            <span class="metric-title">Uptime do Container</span>
+            <span id="metric-uptime" class="metric-value">--</span>
+            <small class="metric-sub">Operação contínua 24 horas</small>
+          </div>
+          <div class="card metric-card">
+            <span class="metric-title">Equipamentos no Inventário</span>
+            <span id="metric-total-ativos" class="metric-value">--</span>
+            <small class="metric-sub">Classes POO derivadas</small>
+          </div>
+          <div class="card metric-card">
+            <span class="metric-title">Invertibilidade (I - A)</span>
+            <span id="metric-invertivel" class="metric-value text-success">--</span>
+            <small class="metric-sub" id="metric-det-sub">det(I - A) = --</small>
+          </div>
+          <div class="card metric-card">
+            <span class="metric-title">Vulnerabilidades Únicas</span>
+            <span id="metric-total-cves" class="metric-value">--</span>
+            <small class="metric-sub">Vetor de severidade v</small>
+          </div>
+        </div>
+
+        <!-- BARRA DE PESQUISA E AÇÃO -->
+        <div class="panel-header">
+          <div class="search-box">
+            <input type="text" id="filtro-busca" placeholder="🔍 Filtrar por Hostname, Responsável, Tipo ou CVE..." oninput="app.filtrarTabela()">
+            <button class="btn btn-secondary btn-sm" onclick="app.limparFiltro()">Limpar</button>
+          </div>
+          <div class="panel-buttons">
+            <button class="btn btn-secondary" onclick="app.abrirModalMatrizes()">📐 Inspecionar Matrizes (M, v, A)</button>
+            <button class="btn btn-success" onclick="app.carregarDados()">Recalcular Risco ⚡</button>
+          </div>
+        </div>
+
+        <!-- TABELA DE ATIVOS E RISCO LINEAR -->
+        <div class="table-card">
+          <table class="data-table" id="tabela-inventario">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Hostname</th>
+                <th>Tipo (Subclasse POO)</th>
+                <th>Responsável</th>
+                <th>Localização</th>
+                <th>Vulnerabilidades</th>
+                <th>Fator Exp.</th>
+                <th>Risco Próprio (b)</th>
+                <th>Risco Efetivo (x)</th>
+                <th>Dependências (Matriz A)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-inventario">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ABA 2: NOVO ATIVO -->
+      <section id="aba-cadastrar" class="tab-pane">
+        <div class="card form-card">
+          <h2>➕ Cadastro de Novo Ativo (Orientação a Objetos)</h2>
+          <p class="section-desc">Instanciação polimórfica de subclasses derivadas da classe <code>Equipamento</code> (Requisito 1 da Tabela 1).</p>
+          <form id="form-cadastrar" onsubmit="event.preventDefault(); app.salvarNovoAtivo();">
+            <div class="form-row">
+              <div class="form-group col-4">
+                <label for="cad-id">ID Único (Numérico) *</label>
+                <input type="number" id="cad-id" min="1" max="999999" placeholder="Ex: 104" required>
+              </div>
+              <div class="form-group col-8">
+                <label for="cad-hostname">Hostname / Nome do Equipamento *</label>
+                <input type="text" id="cad-hostname" placeholder="Ex: srv-web-01" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label for="cad-responsavel">Responsável Técnico *</label>
+                <input type="text" id="cad-responsavel" placeholder="Ex: Yasmin Miranda" required>
+              </div>
+              <div class="form-group col-6">
+                <label for="cad-localizacao">Setor / Localização Física *</label>
+                <input type="text" id="cad-localizacao" placeholder="Ex: Bloco 1E - Sala 30" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label for="cad-tipo">Tipo de Equipamento (Subclasse POO) *</label>
+                <select id="cad-tipo" onchange="app.atualizarCamposDinamicos('cad')" required>
+                  <option value="Servidores">Servidores (Fator Exp: 1.25x)</option>
+                  <option value="Roteadores/Switches">Roteadores / Switches (Fator Exp: 1.10x)</option>
+                  <option value="Computadores">Computadores / Notebooks (Fator Exp: 0.85x)</option>
+                  <option value="Impressoras">Impressoras de Rede (Fator Exp: 0.50x)</option>
+                </select>
+              </div>
+
+              <!-- CAMPOS DINÂMICOS CONFORME O TIPO -->
+              <div class="form-group col-6" id="cad-campo-dinamico-1">
+                <label id="cad-label-dinamico-1">Sistema Operacional</label>
+                <input type="text" id="cad-input-dinamico-1" placeholder="Ex: Ubuntu 22.04 LTS">
+              </div>
+            </div>
+
+            <div class="form-row" id="cad-linha-dinamica-2">
+              <div class="form-group col-6" id="cad-campo-dinamico-2">
+                <label id="cad-label-dinamico-2">Função do Servidor</label>
+                <input type="text" id="cad-input-dinamico-2" placeholder="Ex: Aplicações Web e APIs">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Cadastrar Equipamento 💾</button>
+              <button type="reset" class="btn btn-secondary">Limpar Formulário</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ABA 3: GERENCIAR ATIVOS -->
+      <section id="aba-atualizar" class="tab-pane">
+        <div class="card form-card">
+          <h2>✏️ Atualização e Remoção de Ativos</h2>
+          <p class="section-desc">Selecione um ativo cadastrado para alterar atributos ou registrar frações de dependência ($A_{ij}$).</p>
+
+          <div class="form-group">
+            <label for="sel-ativo-gerenciar">Selecione o Ativo para Gerenciar:</label>
+            <select id="sel-ativo-gerenciar" onchange="app.carregarDadosParaEdicao()">
+              <option value="">-- Escolha um ativo da lista --</option>
+            </select>
+          </div>
+
+          <div id="box-edicao-ativo" style="display: none;">
+            <form id="form-editar" onsubmit="event.preventDefault(); app.salvarEdicaoAtivo();">
+              <input type="hidden" id="edit-id">
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="edit-hostname">Hostname</label>
+                  <input type="text" id="edit-hostname" required>
+                </div>
+                <div class="form-group col-6">
+                  <label for="edit-tipo">Tipo de Ativo</label>
+                  <select id="edit-tipo" onchange="app.atualizarCamposDinamicos('edit')" required>
+                    <option value="Servidores">Servidores</option>
+                    <option value="Roteadores/Switches">Roteadores / Switches</option>
+                    <option value="Computadores">Computadores</option>
+                    <option value="Impressoras">Impressoras</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="edit-responsavel">Responsável</label>
+                  <input type="text" id="edit-responsavel" required>
+                </div>
+                <div class="form-group col-6">
+                  <label for="edit-localizacao">Localização</label>
+                  <input type="text" id="edit-localizacao" required>
+                </div>
+              </div>
+
+              <!-- GERENCIADOR DE DEPENDÊNCIAS DO ATIVO (MATRIZ A) -->
+              <div class="dependency-box">
+                <h3>🔗 Dependências de Risco Transmitido (Matriz A)</h3>
+                <p class="sub">Define a fração de risco $A_{ij} \in [0, 1)$ transmitida de outro equipamento para este:</p>
+                <div class="form-row align-end">
+                  <div class="form-group col-6">
+                    <label for="sel-dependencia-alvo">Equipamento Fornecedor (j):</label>
+                    <select id="sel-dependencia-alvo">
+                      <option value="">-- Selecione o equipamento --</option>
+                    </select>
+                  </div>
+                  <div class="form-group col-4">
+                    <label for="input-dependencia-peso">Fração de Risco (0.01 a 0.99):</label>
+                    <input type="number" id="input-dependencia-peso" step="0.05" min="0.01" max="0.99" placeholder="Ex: 0.30">
+                  </div>
+                  <div class="form-group col-2">
+                    <button type="button" class="btn btn-secondary btn-block" onclick="app.adicionarDependencia()">Vincular ➕</button>
+                  </div>
+                </div>
+
+                <div id="lista-dependencias-ativo" class="chips-container">
+                  <!-- Chips de dependências existentes -->
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar Alterações 💾</button>
+                <button type="button" class="btn btn-danger" onclick="app.excluirAtivoSelecionado()">Excluir Equipamento 🗑️</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 4: VULNERABILIDADES & NVD -->
+      <section id="aba-vulnerabilidades" class="tab-pane">
+        <div class="card form-card">
+          <h2>⚠️ Consulta à Base do NIST/NVD & Vínculo de Vulnerabilidades</h2>
+          <p class="section-desc">Consulte vulnerabilidades conhecidas em tempo real e associe-as aos ativos do inventário.</p>
+
+          <div class="form-row align-end">
+            <div class="form-group col-8">
+              <label for="input-cve-busca">Código CVE (Ex: CVE-2021-44228 ou CVE-2022-22965):</label>
+              <input type="text" id="input-cve-busca" placeholder="CVE-AAAA-NNNN" maxlength="20">
+            </div>
+            <div class="form-group col-4">
+              <button class="btn btn-primary btn-block" onclick="app.consultarNVD()">Consultar NVD Oficial 🌐</button>
+            </div>
+          </div>
+
+          <!-- CARD DE DETALHES DA CVE CONSULTADA -->
+          <div id="card-cve-resultado" class="cve-card" style="display: none;">
+            <div class="cve-header">
+              <span id="cve-res-id" class="cve-code">CVE-XXXX-XXXX</span>
+              <span id="cve-res-severidade" class="badge">SEVERIDADE</span>
+              <span id="cve-res-cvss" class="badge badge-cvss">CVSS 10.0</span>
+            </div>
+            <p id="cve-res-descricao" class="cve-desc">Carregando detalhes...</p>
+            <div id="cve-res-mitigacao" class="cve-mitigacao">💡 Recomendação: ...</div>
+
+            <div class="cve-actions">
+              <div class="form-group col-8">
+                <label for="sel-ativo-vincular-cve">Associar esta CVE ao Ativo:</label>
+                <select id="sel-ativo-vincular-cve">
+                  <option value="">-- Selecione o ativo --</option>
+                </select>
+              </div>
+              <div class="form-group col-4 align-end">
+                <button class="btn btn-success btn-block" onclick="app.vincularCveAoAtivo()">Vincular ao Ativo 🔗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 5: GESTÃO DE USUÁRIOS (ADMIN ONLY) -->
+      <section id="aba-usuarios" class="tab-pane">
+        <div class="card form-card">
+          <h2>👥 Gestão de Contas de Acesso (Administrador)</h2>
+          <p class="section-desc">Controle de acessos com credenciais protegidas via algoritmo de derivação de chave PBKDF2 com Salt.</p>
+
+          <div class="two-columns">
+            <!-- CADASTRO DE NOVO USUÁRIO -->
+            <div>
+              <h3>Cadastrar Novo Usuário</h3>
+              <form id="form-novo-usuario" onsubmit="event.preventDefault(); app.cadastrarUsuario();">
+                <div class="form-group">
+                  <label for="novo-user-login">Login / Usuário:</label>
+                  <input type="text" id="novo-user-login" placeholder="Ex: camila" required>
+                </div>
+                <div class="form-group">
+                  <label for="novo-user-nome">Nome Completo:</label>
+                  <input type="text" id="novo-user-nome" placeholder="Ex: Camila Ramos" required>
+                </div>
+                <div class="form-group">
+                  <label for="novo-user-senha">Senha Provisória:</label>
+                  <input type="password" id="novo-user-senha" placeholder="Mínimo 6 caracteres" required>
+                </div>
+                <div class="form-group">
+                  <label for="novo-user-role">Perfil de Acesso:</label>
+                  <select id="novo-user-role">
+                    <option value="user">Operador (user)</option>
+                    <option value="admin">Administrador (admin)</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Salvar Usuário 👤</button>
+              </form>
+            </div>
+
+            <!-- TABELA DE USUÁRIOS EXISTENTES -->
+            <div>
+              <h3>Usuários Registrados</h3>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>Nome</th>
+                    <th>Perfil</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-usuarios">
+                  <!-- Preenchido via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ALTERAR SENHA -->
+  <div id="modal-senha" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Alterar Senha de Acesso 🔑</h3>
+        <button class="modal-close" onclick="app.fecharModalSenha()">×</button>
+      </div>
+      <form onsubmit="event.preventDefault(); app.confirmarAlteracaoSenha();">
+        <div class="form-group">
+          <label for="senha-atual">Senha Atual</label>
+          <input type="password" id="senha-atual" required>
+        </div>
+        <div class="form-group">
+          <label for="senha-nova">Nova Senha (mín. 6 dígitos)</label>
+          <input type="password" id="senha-nova" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label for="senha-confirma">Confirmar Nova Senha</label>
+          <input type="password" id="senha-confirma" minlength="6" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar Nova Senha</button>
+          <button type="button" class="btn btn-secondary" onclick="app.fecharModalSenha()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: INSPEÇÃO MATEMÁTICA DAS MATRIZES (ÁLGEBRA LINEAR) -->
+  <div id="modal-matrizes" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h3>📐 Inspeção do Modelo de Álgebra Linear: (I - A) x = b</h3>
+        <button class="modal-close" onclick="app.fecharModalMatrizes()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="matrix-section">
+          <h4>1. Matriz de Incidência $M \in \{0, 1\}^{n \times m}$ & Severidades $v$</h4>
+          <p class="matrix-desc">Mapeia cada equipamento $i$ às vulnerabilidades $j$ que o afetam, resultando no risco próprio $b = M \cdot v$:</p>
+          <div id="matriz-M-container" class="matrix-render"></div>
+        </div>
+
+        <div class="matrix-section">
+          <h4>2. Matriz de Dependências $A \in \mathbb{R}^{n \times n}$ & Sistema $(I - A)$</h4>
+          <p class="matrix-desc">Fração de risco transmitida entre equipamentos com $A_{ii} = 0$. Matriz $(I - A)$ com verificação de invertibilidade:</p>
+          <div id="matriz-A-container" class="matrix-render"></div>
+        </div>
+
+        <div class="matrix-section">
+          <h4>3. Solução do Sistema: Risco Efetivo $x$</h4>
+          <div id="vetores-solucao-container" class="matrix-render"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER DE NOTIFICAÇÕES (TOASTS) -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO -->
+  <script src="/app.js"></script>
+</body>
+</html>
