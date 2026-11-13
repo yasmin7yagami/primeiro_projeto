@@ -3,13 +3,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: trab02_app
-    restart: unless-stopped
+    container_name: trab02_inventario_app
+    restart: always
+    ports:
+      - "8000:8000"
     volumes:
       - dados_ativos:/app/data
     environment:
       - PYTHONUNBUFFERED=1
-    command: ["python", "-m", "pytest", "tests/"]
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
 volumes:
   dados_ativos:

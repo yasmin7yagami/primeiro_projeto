@@ -1,0 +1,12 @@
+﻿{
+  "admin": {
+    "hash": "ddb37d83a3c9cf6b628f19e52b29d126$017a0cdab31ed6341c74823a8cf9f22e56419967fffc38444c0e3c612843fff1",
+    "nome": "Administrador UFU",
+    "role": "admin"
+  },
+  "yas": {
+    "hash": "d614244608ff1035bec7b0aabd193b91$5e367cb2f5cd94f218ec8306400b894ddae007cfd76267ebae5e30e4e40dbbe8",
+    "nome": "yasmin",
+    "role": "user"
+  }
+}

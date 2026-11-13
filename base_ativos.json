@@ -1,0 +1,45 @@
+﻿[
+  {
+    "id_ativo": 101,
+    "hostname": "servidorprincipal",
+    "responsavel": "yasmin",
+    "localizacao": "1e30",
+    "tipo": "Servidores",
+    "vulnerabilidades": [
+      "CVE-2021-44228"
+    ],
+    "dependencias": {
+      "102": 0.3
+    },
+    "sistema_operacional": "Ubuntu 22.04 LTS",
+    "funcao": "Servidor de Aplicacao"
+  },
+  {
+    "id_ativo": 102,
+    "hostname": "bancodados",
+    "responsavel": "yasmin",
+    "localizacao": "DataCenter",
+    "tipo": "Servidores",
+    "vulnerabilidades": [
+      "CVE-2022-22965"
+    ],
+    "dependencias": {},
+    "sistema_operacional": "Debian 12",
+    "funcao": "PostgreSQL Cluster"
+  },
+  {
+    "id_ativo": 103,
+    "hostname": "roteador-borda",
+    "responsavel": "ciberseguranca",
+    "localizacao": "Rack-01",
+    "tipo": "Roteadores/Switches",
+    "vulnerabilidades": [
+      "CVE-2023-38606"
+    ],
+    "dependencias": {
+      "101": 0.2
+    },
+    "qtd_portas": 48,
+    "camada": "L3"
+  }
+]
