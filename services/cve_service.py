@@ -1,8 +1,16 @@
 import json
 import os
-import requests
 from config import NOME_ARQUIVO_CVES
 from utils import traduzir_texto, validar_cve
+
+try:
+    import requests
+    TEM_REQUESTS = True
+except ImportError:
+    requests = None
+    TEM_REQUESTS = False
+    import urllib.request
+    import urllib.error
 
 
 def carregar_cves_locais():
@@ -10,7 +18,7 @@ def carregar_cves_locais():
     if not os.path.exists(NOME_ARQUIVO_CVES):
         return {}
     try:
-        with open(NOME_ARQUIVO_CVES, "r", encoding="utf-8") as f:
+        with open(NOME_ARQUIVO_CVES, "r", encoding="utf-8-sig") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -69,69 +77,80 @@ def consultar_cve_nvd(codigo_cve):
     """Consulta os detalhes de uma CVE via validação local, cache ou API do NIST/NVD."""
     codigo_limpo = codigo_cve.strip().upper()
 
-    # 1. Validação Prévia 🔍
+    # 1. Validação Prévia
     if not validar_cve(codigo_limpo):
         return {
             "erro": "Formato de CVE inválido! Use o padrão: CVE-AAAA-NNNN (ex: CVE-2021-44228)"
         }
 
-    # 2. Busca no Cache Local 💾
+    # 2. Busca no Cache Local
     cves_locais = carregar_cves_locais()
     if codigo_limpo in cves_locais:
         dados_cache = cves_locais[codigo_limpo].copy()
         dados_cache["origem"] = "local"
         return dados_cache
 
-    # 3. Consulta à API da NVD 🌐
+    # 3. Consulta à API da NVD
     url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={codigo_limpo}"
     headers = {"User-Agent": "MeuAppPython/1.0"}
 
     try:
-        resposta = requests.get(url, headers=headers, timeout=10)
-        if resposta.status_code == 200:
-            dados = resposta.json()
-            vulnerabilidades = dados.get("vulnerabilities", [])
-
-            if not vulnerabilidades:
-                return {
-                    "erro": "Vulnerabilidade não encontrada na base de dados oficial da NVD."
-                }
-
-            cve_data = vulnerabilidades[0].get("cve", {})
-
-            descriptions = cve_data.get("descriptions", [])
-            descricao_en = "Descrição não disponível."
-            for d in descriptions:
-                if d.get("lang") == "en":
-                    descricao_en = d.get("value")
-                    break
-
-            metrics = cve_data.get("metrics", {})
-            cvss_data = metrics.get("cvssMetricV31", [])
-            cvss_score = (
-                cvss_data[0].get("cvssData", {}).get("baseScore", "N/A")
-                if cvss_data
-                else "N/A"
-            )
-
-            # 4. Tradução Automática para Português 🔤
-            descricao_pt = traduzir_texto(descricao_en)
-
-            estrutura_cve = {
-                "id": codigo_limpo,
-                "cvss": cvss_score,
-                "descricao_en": descricao_en,
-                "descricao": descricao_pt,
-                "origem": "api",
-            }
-
-            # 5. Guarda no Cache Local para futuras pesquisas 💾
-            guardar_cve_local(codigo_limpo, estrutura_cve)
-
-            return estrutura_cve
+        dados = None
+        if TEM_REQUESTS:
+            resposta = requests.get(url, headers=headers, timeout=10)
+            if resposta.status_code == 200:
+                dados = resposta.json()
+            else:
+                return {"erro": f"Erro na resposta da NVD. Código HTTP: {resposta.status_code}"}
         else:
+            # Fallback nativo com urllib (zero dependências extras)
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    corpo = resp.read().decode("utf-8")
+                    dados = json.loads(corpo)
+                else:
+                    return {"erro": f"Erro na resposta da NVD. Código HTTP: {resp.status}"}
+
+        if not dados:
+            return {"erro": "Resposta vazia da NVD."}
+
+        vulnerabilidades = dados.get("vulnerabilities", [])
+        if not vulnerabilidades:
             return {
-                "erro": f"Erro na resposta da NVD. Código HTTP: {resposta.status_code}"
+                "erro": "Vulnerabilidade não encontrada na base de dados oficial da NVD."
             }
+
+        cve_data = vulnerabilidades[0].get("cve", {})
+        descriptions = cve_data.get("descriptions", [])
+        descricao_en = "Descrição não disponível."
+        for d in descriptions:
+            if d.get("lang") == "en":
+                descricao_en = d.get("value")
+                break
+
+        metrics = cve_data.get("metrics", {})
+        cvss_data = metrics.get("cvssMetricV31", [])
+        cvss_score = (
+            cvss_data[0].get("cvssData", {}).get("baseScore", "N/A")
+            if cvss_data
+            else "N/A"
+        )
+
+        # 4. Tradução Automática para Português (se deep_translator disponível)
+        descricao_pt = traduzir_texto(descricao_en)
+
+        estrutura_cve = {
+            "id": codigo_limpo,
+            "cvss": cvss_score,
+            "descricao_en": descricao_en,
+            "descricao": descricao_pt,
+            "origem": "api",
+        }
+
+        # 5. Guarda no Cache Local para futuras pesquisas
+        guardar_cve_local(codigo_limpo, estrutura_cve)
+        return estrutura_cve
+
     except Exception as e:
         return {"erro": f"Falha na conexão com a NVD: {e}"}

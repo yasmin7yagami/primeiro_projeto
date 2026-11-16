@@ -29,7 +29,7 @@ def verificar_senha(senha_digitada, hash_salvo):
 def carregar_usuarios():
     """Carrega os usuários cadastrados no arquivo JSON ou cria o admin padrão."""
     try:
-        with open(NOME_ARQUIVO_USUARIOS, "r", encoding="utf-8") as f:
+        with open(NOME_ARQUIVO_USUARIOS, "r", encoding="utf-8-sig") as f:
             usuarios = json.load(f)
             if "admin" in usuarios and usuarios["admin"].get("role") != "admin":
                 usuarios["admin"]["role"] = "admin"

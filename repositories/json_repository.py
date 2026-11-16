@@ -25,7 +25,7 @@ class JsonAtivoRepository(IAtivoRepository):
             return
 
         try:
-            with open(self.caminho_arquivo, "r", encoding="utf-8") as f:
+            with open(self.caminho_arquivo, "r", encoding="utf-8-sig") as f:
                 conteudo = json.load(f)
 
                 if isinstance(conteudo, list):
