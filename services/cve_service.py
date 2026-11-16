@@ -12,9 +12,7 @@ except ImportError:
     import urllib.request
     import urllib.error
 
-
 def carregar_cves_locais():
-    """Carrega o cache local de CVEs já pesquisadas."""
     if not os.path.exists(NOME_ARQUIVO_CVES):
         return {}
     try:
@@ -23,9 +21,7 @@ def carregar_cves_locais():
     except Exception:
         return {}
 
-
 def guardar_cve_local(codigo_cve, dados_cve):
-    """Salva os dados de uma CVE no cache local para pesquisas futuras sem gastar requisições."""
     dados_locais = carregar_cves_locais()
     dados_locais[codigo_cve] = dados_cve
     try:
@@ -36,9 +32,7 @@ def guardar_cve_local(codigo_cve, dados_cve):
         print(f"⚠️ Erro ao salvar cache da CVE: {e}")
         return False
 
-
 def traduzir_severidade(cvss_score):
-    """Traduz a pontuação CVSS numérica em rótulo visual, cor e recomendação de mitigação."""
     try:
         score = float(cvss_score)
         if score >= 9.0:
@@ -72,25 +66,20 @@ def traduzir_severidade(cvss_score):
             "💡 Ação Recomendada: Consultar a documentação do fornecedor do software.",
         )
 
-
 def consultar_cve_nvd(codigo_cve):
-    """Consulta os detalhes de uma CVE via validação local, cache ou API do NIST/NVD."""
     codigo_limpo = codigo_cve.strip().upper()
 
-    # 1. Validação Prévia
     if not validar_cve(codigo_limpo):
         return {
             "erro": "Formato de CVE inválido! Use o padrão: CVE-AAAA-NNNN (ex: CVE-2021-44228)"
         }
 
-    # 2. Busca no Cache Local
     cves_locais = carregar_cves_locais()
     if codigo_limpo in cves_locais:
         dados_cache = cves_locais[codigo_limpo].copy()
         dados_cache["origem"] = "local"
         return dados_cache
 
-    # 3. Consulta à API da NVD
     url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={codigo_limpo}"
     headers = {"User-Agent": "MeuAppPython/1.0"}
 
@@ -103,7 +92,6 @@ def consultar_cve_nvd(codigo_cve):
             else:
                 return {"erro": f"Erro na resposta da NVD. Código HTTP: {resposta.status_code}"}
         else:
-            # Fallback nativo com urllib (zero dependências extras)
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=10) as resp:
                 if resp.status == 200:
@@ -137,7 +125,6 @@ def consultar_cve_nvd(codigo_cve):
             else "N/A"
         )
 
-        # 4. Tradução Automática para Português (se deep_translator disponível)
         descricao_pt = traduzir_texto(descricao_en)
 
         estrutura_cve = {
@@ -148,7 +135,6 @@ def consultar_cve_nvd(codigo_cve):
             "origem": "api",
         }
 
-        # 5. Guarda no Cache Local para futuras pesquisas
         guardar_cve_local(codigo_limpo, estrutura_cve)
         return estrutura_cve
 

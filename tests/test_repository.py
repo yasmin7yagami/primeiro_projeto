@@ -2,7 +2,6 @@ import json
 from models import Computador, Servidor, TipoAtivo
 from repositories import JsonAtivoRepository, MemoriaAtivoRepository
 
-
 def test_memoria_repository_crud():
     repo = MemoriaAtivoRepository()
     servidor = Servidor(1, "srv-01", "Admin", "Sala A")
@@ -13,7 +12,6 @@ def test_memoria_repository_crud():
 
     assert repo.remover(1) is True
     assert repo.existe(1) is False
-
 
 def test_json_repository_persistencia_e_recarga(tmp_path):
     arquivo_teste = tmp_path / "teste_ativos.json"
@@ -29,7 +27,6 @@ def test_json_repository_persistencia_e_recarga(tmp_path):
     )
     repo1.salvar(pc)
 
-    # Recarrega a partir de uma nova instância lendo o mesmo arquivo
     repo2 = JsonAtivoRepository(caminho_arquivo=str(arquivo_teste))
     ativo_recuperado = repo2.obter_por_id(201)
 
@@ -39,9 +36,7 @@ def test_json_repository_persistencia_e_recarga(tmp_path):
     assert ativo_recuperado.departamento == "Segurança"
     assert "CVE-2022-1234" in ativo_recuperado.vulnerabilidades
 
-
 def test_json_repository_formato_array_json(tmp_path):
-    """Garante atendimento ao Requisito 2: o arquivo gerado deve ser um array (lista) de objetos JSON."""
     arquivo_teste = tmp_path / "teste_formato_array.json"
     repo = JsonAtivoRepository(caminho_arquivo=str(arquivo_teste))
 
@@ -52,7 +47,6 @@ def test_json_repository_formato_array_json(tmp_path):
     repo.salvar(s1)
     repo.salvar(s2)
 
-    # Lê o arquivo diretamente em disco e verifica se a raiz é uma lista
     with open(arquivo_teste, "r", encoding="utf-8") as f:
         dados = json.load(f)
 
@@ -62,6 +56,5 @@ def test_json_repository_formato_array_json(tmp_path):
     assert 101 in ids
     assert 102 in ids
 
-    # Verifica persistência das dependências
     item_101 = next(item for item in dados if item["id_ativo"] == 101)
     assert item_101["dependencias"] == {"102": 0.25}

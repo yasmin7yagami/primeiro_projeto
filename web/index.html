@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- TELA DE LOGIN (MODAL / OVERLAY INICIAL) -->
+  
   <div id="login-overlay" class="login-overlay">
     <div class="login-card">
       <div class="login-header">
@@ -33,10 +33,10 @@
     </div>
   </div>
 
-  <!-- APLICAÇÃO PRINCIPAL (NAVBAR + CORPO) -->
+  
   <div id="app-container" class="app-container" style="display: none;">
 
-    <!-- TOPO / CABEÇALHO -->
+    
     <header class="app-header">
       <div class="header-brand">
         <span class="brand-icon">🛡️</span>
@@ -57,7 +57,7 @@
       </div>
     </header>
 
-    <!-- NAVEGAÇÃO POR ABAS -->
+    
     <nav class="app-nav">
       <button class="nav-tab active" onclick="app.mudarAba('dashboard')">📊 Relatório & Álgebra Linear</button>
       <button class="nav-tab" onclick="app.mudarAba('cadastrar')">➕ Novo Ativo</button>
@@ -66,12 +66,12 @@
       <button id="tab-btn-usuarios" class="nav-tab" onclick="app.mudarAba('usuarios')" style="display: none;">👥 Gestão de Usuários</button>
     </nav>
 
-    <!-- CONTEÚDO DAS ABAS -->
+    
     <main class="app-content">
 
-      <!-- ABA 1: DASHBOARD & ÁLGEBRA LINEAR -->
+      
       <section id="aba-dashboard" class="tab-pane active">
-        <!-- CARDS DE MÉTRICAS -->
+        
         <div class="metrics-grid">
           <div class="card metric-card">
             <span class="metric-title">Uptime do Container</span>
@@ -95,7 +95,7 @@
           </div>
         </div>
 
-        <!-- BARRA DE PESQUISA E AÇÃO -->
+        
         <div class="panel-header">
           <div class="search-box">
             <input type="text" id="filtro-busca" placeholder="🔍 Filtrar por Hostname, Responsável, Tipo ou CVE..." oninput="app.filtrarTabela()">
@@ -107,7 +107,7 @@
           </div>
         </div>
 
-        <!-- TABELA DE ATIVOS E RISCO LINEAR -->
+        
         <div class="table-card">
           <table class="data-table" id="tabela-inventario">
             <thead>
@@ -125,13 +125,13 @@
               </tr>
             </thead>
             <tbody id="tbody-inventario">
-              <!-- Preenchido via JS -->
+              
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- ABA 2: NOVO ATIVO -->
+      
       <section id="aba-cadastrar" class="tab-pane">
         <div class="card form-card">
           <h2>➕ Cadastro de Novo Ativo (Orientação a Objetos)</h2>
@@ -170,7 +170,7 @@
                 </select>
               </div>
 
-              <!-- CAMPOS DINÂMICOS CONFORME O TIPO -->
+              
               <div class="form-group col-6" id="cad-campo-dinamico-1">
                 <label id="cad-label-dinamico-1">Sistema Operacional</label>
                 <input type="text" id="cad-input-dinamico-1" placeholder="Ex: Ubuntu 22.04 LTS">
@@ -192,7 +192,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: GERENCIAR ATIVOS -->
+      
       <section id="aba-atualizar" class="tab-pane">
         <div class="card form-card">
           <h2>✏️ Atualização e Remoção de Ativos</h2>
@@ -236,7 +236,7 @@
                 </div>
               </div>
 
-              <!-- GERENCIADOR DE DEPENDÊNCIAS DO ATIVO (MATRIZ A) -->
+              
               <div class="dependency-box">
                 <h3>🔗 Dependências de Risco Transmitido (Matriz A)</h3>
                 <p class="sub">Define a fração de risco $A_{ij} \in [0, 1)$ transmitida de outro equipamento para este:</p>
@@ -257,7 +257,7 @@
                 </div>
 
                 <div id="lista-dependencias-ativo" class="chips-container">
-                  <!-- Chips de dependências existentes -->
+                  
                 </div>
               </div>
 
@@ -270,7 +270,7 @@
         </div>
       </section>
 
-      <!-- ABA 4: VULNERABILIDADES & NVD -->
+      
       <section id="aba-vulnerabilidades" class="tab-pane">
         <div class="card form-card">
           <h2>⚠️ Consulta à Base do NIST/NVD & Vínculo de Vulnerabilidades</h2>
@@ -286,7 +286,7 @@
             </div>
           </div>
 
-          <!-- CARD DE DETALHES DA CVE CONSULTADA -->
+          
           <div id="card-cve-resultado" class="cve-card" style="display: none;">
             <div class="cve-header">
               <span id="cve-res-id" class="cve-code">CVE-XXXX-XXXX</span>
@@ -311,14 +311,14 @@
         </div>
       </section>
 
-      <!-- ABA 5: GESTÃO DE USUÁRIOS (ADMIN ONLY) -->
+      
       <section id="aba-usuarios" class="tab-pane">
         <div class="card form-card">
           <h2>👥 Gestão de Contas de Acesso (Administrador)</h2>
           <p class="section-desc">Controle de acessos com credenciais protegidas via algoritmo de derivação de chave PBKDF2 com Salt.</p>
 
           <div class="two-columns">
-            <!-- CADASTRO DE NOVO USUÁRIO -->
+            
             <div>
               <h3>Cadastrar Novo Usuário</h3>
               <form id="form-novo-usuario" onsubmit="event.preventDefault(); app.cadastrarUsuario();">
@@ -345,7 +345,7 @@
               </form>
             </div>
 
-            <!-- TABELA DE USUÁRIOS EXISTENTES -->
+            
             <div>
               <h3>Usuários Registrados</h3>
               <table class="data-table">
@@ -358,7 +358,7 @@
                   </tr>
                 </thead>
                 <tbody id="tbody-usuarios">
-                  <!-- Preenchido via JS -->
+                  
                 </tbody>
               </table>
             </div>
@@ -369,7 +369,7 @@
     </main>
   </div>
 
-  <!-- MODAL: ALTERAR SENHA -->
+  
   <div id="modal-senha" class="modal-backdrop" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
@@ -397,7 +397,7 @@
     </div>
   </div>
 
-  <!-- MODAL: INSPEÇÃO MATEMÁTICA DAS MATRIZES (ÁLGEBRA LINEAR) -->
+  
   <div id="modal-matrizes" class="modal-backdrop" style="display: none;">
     <div class="modal-card modal-large">
       <div class="modal-header">
@@ -425,10 +425,10 @@
     </div>
   </div>
 
-  <!-- CONTAINER DE NOTIFICAÇÕES (TOASTS) -->
+  
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO -->
+  
   <script src="/app.js"></script>
 </body>
 </html>

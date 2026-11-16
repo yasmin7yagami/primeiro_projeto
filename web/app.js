@@ -1,8 +1,3 @@
-/**
- * UFU — CIBERSEGURANÇA | Trabalho 02 (Sprints 3 a 5)
- * Controlador Frontend Web SPA (Vanilla JavaScript)
- */
-
 class InventarioApp {
   constructor() {
     this.usuarioLogado = null;
@@ -10,7 +5,6 @@ class InventarioApp {
     this.dadosRisco = null;
     this.cveAtualConsultada = null;
 
-    // Inicialização ao carregar a página
     window.addEventListener("DOMContentLoaded", () => this.inicializar());
   }
 
@@ -29,9 +23,6 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // AUTENTICAÇÃO E SESSÃO
-  // =========================================================================
   async efetuarLogin() {
     const usuario = document.getElementById("login-usuario").value.trim();
     const senha = document.getElementById("login-senha").value;
@@ -78,22 +69,17 @@ class InventarioApp {
     document.getElementById("login-overlay").style.display = "none";
     document.getElementById("app-container").style.display = "block";
 
-    // Atualiza cabeçalho com dados da sessão
     document.getElementById("header-user-name").textContent = `👤 ${this.usuarioLogado.nome}`;
     const badgeRole = document.getElementById("header-user-role");
     badgeRole.textContent = this.usuarioLogado.role.toUpperCase();
     badgeRole.className = `badge ${this.usuarioLogado.role === "admin" ? "badge-success" : "badge-role"}`;
 
-    // Exibe aba de gestão de usuários apenas se for admin
     const tabAdmin = document.getElementById("tab-btn-usuarios");
     tabAdmin.style.display = this.usuarioLogado.role === "admin" ? "inline-block" : "none";
 
     this.carregarDados();
   }
 
-  // =========================================================================
-  // NAVEGAÇÃO POR ABAS
-  // =========================================================================
   mudarAba(nomeAba) {
     document.querySelectorAll(".nav-tab").forEach(tab => tab.classList.remove("active"));
     document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
@@ -111,12 +97,8 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // CARREGAMENTO DE DADOS (API REST)
-  // =========================================================================
   async carregarDados() {
     try {
-      // 1. Healthcheck / Uptime
       const resHealth = await fetch("/api/health");
       if (resHealth.ok) {
         const health = await resHealth.json();
@@ -124,13 +106,11 @@ class InventarioApp {
         document.getElementById("metric-uptime").textContent = `${horas}h online`;
       }
 
-      // 2. Ativos
       const resAtivos = await fetch("/api/ativos");
       const dataAtivos = await resAtivos.json();
       this.ativos = dataAtivos.ativos || [];
       document.getElementById("metric-total-ativos").textContent = this.ativos.length;
 
-      // 3. Análise de Risco (Álgebra Linear - Requisito 4)
       const resRisco = await fetch("/api/risco");
       this.dadosRisco = await resRisco.json();
 
@@ -158,7 +138,6 @@ class InventarioApp {
       return;
     }
 
-    // Mapa de riscos calculados pela Álgebra Linear
     const mapaRisco = {};
     if (this.dadosRisco && this.dadosRisco.tabela) {
       this.dadosRisco.tabela.forEach(item => {
@@ -217,9 +196,6 @@ class InventarioApp {
     this.filtrarTabela();
   }
 
-  // =========================================================================
-  // CAMPOS DINÂMICOS CONFORME O TIPO POO
-  // =========================================================================
   atualizarCamposDinamicos(prefixo) {
     const tipo = document.getElementById(`${prefixo}-tipo`).value;
     const label1 = document.getElementById(`${prefixo}-label-dinamico-1`);
@@ -253,9 +229,6 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // CRUD DE ATIVOS
-  // =========================================================================
   async salvarNovoAtivo() {
     const id_ativo = parseInt(document.getElementById("cad-id").value);
     const hostname = document.getElementById("cad-hostname").value.trim();
@@ -462,9 +435,6 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // VULNERABILIDADES & NIST/NVD
-  // =========================================================================
   async consultarNVD() {
     const codigo = document.getElementById("input-cve-busca").value.trim().toUpperCase();
     if (!codigo) {
@@ -544,9 +514,6 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // GESTÃO DE USUÁRIOS (ADMIN)
-  // =========================================================================
   async carregarUsuarios() {
     try {
       const res = await fetch("/api/usuarios");
@@ -623,9 +590,6 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // MODAL DE ALTERAÇÃO DE SENHA
-  // =========================================================================
   abrirModalSenha() {
     document.getElementById("modal-senha").style.display = "flex";
   }
@@ -667,9 +631,6 @@ class InventarioApp {
     }
   }
 
-  // =========================================================================
-  // MODAL DE INSPEÇÃO MATEMÁTICA DAS MATRIZES (ÁLGEBRA LINEAR)
-  // =========================================================================
   abrirModalMatrizes() {
     if (!this.dadosRisco || !this.dadosRisco.sucesso) {
       this.mostrarToast("Nenhum dado matemático disponível no momento.", "info");
@@ -679,7 +640,6 @@ class InventarioApp {
     const modal = document.getElementById("modal-matrizes");
     modal.style.display = "flex";
 
-    // 1. Renderiza M e v
     const mContainer = document.getElementById("matriz-M-container");
     const m = this.dadosRisco.matriz_M || [];
     const v = this.dadosRisco.vetor_v || [];
@@ -693,7 +653,6 @@ class InventarioApp {
     });
     mContainer.textContent = txtM;
 
-    // 2. Renderiza A e (I - A)
     const aContainer = document.getElementById("matriz-A-container");
     const a = this.dadosRisco.matriz_A || [];
     const ia = this.dadosRisco.matriz_I_A || [];
@@ -711,7 +670,6 @@ class InventarioApp {
     txtA += `  - Invertível: ${this.dadosRisco.invertivel ? "SIM (Solução única garantida)" : "NÃO (Matriz Singular)"}\n`;
     aContainer.textContent = txtA;
 
-    // 3. Vetores de Risco Próprio b e Risco Efetivo x
     const solContainer = document.getElementById("vetores-solucao-container");
     const b = this.dadosRisco.risco_proprio_b || [];
     const x = this.dadosRisco.risco_efetivo_x || [];
@@ -729,9 +687,6 @@ class InventarioApp {
     document.getElementById("modal-matrizes").style.display = "none";
   }
 
-  // =========================================================================
-  // TOASTS DE NOTIFICAÇÃO
-  // =========================================================================
   mostrarToast(mensagem, tipo = "info") {
     const container = document.getElementById("toast-container");
     const toast = document.createElement("div");
@@ -748,5 +703,4 @@ class InventarioApp {
   }
 }
 
-// Instância global
 const app = new InventarioApp();

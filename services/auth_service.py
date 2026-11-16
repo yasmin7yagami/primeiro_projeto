@@ -3,9 +3,7 @@ import json
 import secrets
 from config import NOME_ARQUIVO_USUARIOS
 
-
 def gerar_hash_senha(senha, salt=None):
-    """Gera um hash PBKDF2 com salt de 16 bytes para armazenamento seguro de senhas."""
     if not salt:
         salt = secrets.token_hex(16)
     key = hashlib.pbkdf2_hmac(
@@ -13,9 +11,7 @@ def gerar_hash_senha(senha, salt=None):
     )
     return f"{salt}${key.hex()}"
 
-
 def verificar_senha(senha_digitada, hash_salvo):
-    """Compara a senha digitada com o hash salvo usando comparação em tempo constante."""
     try:
         salt, key_hex = hash_salvo.split("$")
         novo_hash = hashlib.pbkdf2_hmac(
@@ -25,9 +21,7 @@ def verificar_senha(senha_digitada, hash_salvo):
     except Exception:
         return False
 
-
 def carregar_usuarios():
-    """Carrega os usuários cadastrados no arquivo JSON ou cria o admin padrão."""
     try:
         with open(NOME_ARQUIVO_USUARIOS, "r", encoding="utf-8-sig") as f:
             usuarios = json.load(f)
@@ -48,9 +42,7 @@ def carregar_usuarios():
             json.dump(usuarios_iniciais, f, indent=4, ensure_ascii=False)
         return usuarios_iniciais
 
-
 def salvar_usuario(usuario, senha, nome, role="user"):
-    """Cadastra um novo usuário no sistema."""
     usuarios = carregar_usuarios()
     usuarios[usuario] = {
         "hash": gerar_hash_senha(senha),
@@ -60,9 +52,7 @@ def salvar_usuario(usuario, senha, nome, role="user"):
     with open(NOME_ARQUIVO_USUARIOS, "w", encoding="utf-8") as f:
         json.dump(usuarios, f, indent=4, ensure_ascii=False)
 
-
 def atualizar_role_usuario(usuario, novo_role):
-    """Atualiza o perfil de acesso (user/admin) de um usuário."""
     usuarios = carregar_usuarios()
     if usuario in usuarios:
         usuarios[usuario]["role"] = novo_role
@@ -71,9 +61,7 @@ def atualizar_role_usuario(usuario, novo_role):
         return True
     return False
 
-
 def deletar_usuario(usuario):
-    """Exclui um usuário (exceto o admin padrão)."""
     if usuario.lower() == "admin":
         return False, "O usuário 'admin' padrão não pode ser removido!"
 
@@ -85,9 +73,7 @@ def deletar_usuario(usuario):
         return True, f"Usuário '{usuario}' removido com sucesso!"
     return False, "Usuário não encontrado."
 
-
 def alterar_senha_usuario(login_id, senha_atual, nova_senha):
-    """Altera a senha de um usuário autenticado."""
     if len(nova_senha) < 6:
         return False, "A nova senha deve ter pelo menos 6 caracteres."
 
@@ -104,9 +90,7 @@ def alterar_senha_usuario(login_id, senha_atual, nova_senha):
 
     return True, "Senha alterada com sucesso!"
 
-
 def autenticar_usuario(usuario, senha):
-    """Realiza a validação das credenciais de login."""
     usuarios = carregar_usuarios()
     if usuario in usuarios and verificar_senha(senha, usuarios[usuario]["hash"]):
         dados = usuarios[usuario]

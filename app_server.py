@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import parse_qs, urlparse
 
-# Garante importação dos módulos da raiz do projeto
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 if DIRETORIO_ATUAL not in sys.path:
     sys.path.insert(0, DIRETORIO_ATUAL)
@@ -30,7 +29,6 @@ from services.auth_service import (
 from services.cve_service import consultar_cve_nvd
 from services.risco_service import RiscoLinearService
 
-# Configuração de Logs Estruturados para Container Docker (Requisito 3 / S4_18)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] (Web-Daemon) %(message)s",
@@ -44,9 +42,7 @@ HORA_INICIO = time.time()
 REPO = JsonAtivoRepository(caminho_arquivo=NOME_ARQUIVO_ATIVOS)
 SERVICO_RISCO = RiscoLinearService(repositorio=REPO)
 
-
 class DaemonMonitorThread(threading.Thread):
-    """Thread daemon para monitoramento contínuo de integridade e auditoria 24h (Requisito 3)."""
 
     def __init__(self, intervalo_segundos: int = 60):
         super().__init__(daemon=True, name="Monitor24hThread")
@@ -71,15 +67,12 @@ class DaemonMonitorThread(threading.Thread):
     def parar(self):
         self.ativo = False
 
-
 class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
-    """Servidor HTTP REST e Servidor Estático de Web SPA para o Trabalho 02."""
 
     def log_message(self, format, *args):
         logging.info(f"HTTP {self.command} {self.path} - {args[1] if len(args) > 1 else ''}")
 
     def _ler_corpo_json(self) -> Dict[str, Any]:
-        """Lê e desserializa o corpo JSON da requisição."""
         content_length = int(self.headers.get("Content-Length", 0))
         if content_length == 0:
             return {}
@@ -101,7 +94,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(conteudo)
 
     def _servir_arquivo_estatico(self, caminho_relativo: str):
-        """Serve arquivos HTML, CSS e JS da pasta web/."""
         if caminho_relativo in ("", "/", "/index.html"):
             arquivo_alvo = os.path.join(PASTA_WEB, "index.html")
         else:
@@ -129,22 +121,17 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
             self._responder_json(500, {"erro": "Erro ao ler arquivo estático."})
 
     def do_OPTIONS(self):
-        """Suporte a CORS preflight."""
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
-    # =========================================================================
-    # REQUISIÇÕES GET (Consultas e Arquivos Estáticos)
-    # =========================================================================
     def do_GET(self):
         parsed_url = urlparse(self.path)
         caminho = parsed_url.path
         params = parse_qs(parsed_url.query)
 
-        # 1. Healthcheck Contínuo para o Docker (Requisito 3)
         if caminho in ("/api/health", "/health"):
             uptime = int(time.time() - HORA_INICIO)
             self._responder_json(200, {
@@ -158,19 +145,16 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
             })
             return
 
-        # 2. Listagem de Ativos (Requisito 2 - Lista JSON)
         if caminho == "/api/ativos":
             ativos = [ativo.to_dict() for ativo in REPO.listar_todos().values()]
             self._responder_json(200, {"sucesso": True, "total": len(ativos), "ativos": ativos})
             return
 
-        # 3. Análise de Risco por Álgebra Linear (Requisito 4)
         if caminho == "/api/risco":
             resultado = SERVICO_RISCO.calcular_risco()
             self._responder_json(200, resultado.to_dict())
             return
 
-        # 4. Consulta de CVE na API da NVD / Cache
         if caminho == "/api/cve/consultar":
             codigo = params.get("codigo", [""])[0]
             if not codigo:
@@ -180,7 +164,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
             self._responder_json(200, dados_cve)
             return
 
-        # 5. Listagem de Usuários (Admin)
         if caminho == "/api/usuarios":
             usuarios = carregar_usuarios()
             usuarios_sanitizados = {
@@ -190,17 +173,12 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
             self._responder_json(200, {"sucesso": True, "usuarios": usuarios_sanitizados})
             return
 
-        # 6. Servir Frontend Web (SPA)
         self._servir_arquivo_estatico(caminho)
 
-    # =========================================================================
-    # REQUISIÇÕES POST (Criações e Autenticação)
-    # =========================================================================
     def do_POST(self):
         caminho = urlparse(self.path).path
         corpo = self._ler_corpo_json()
 
-        # 1. Login
         if caminho == "/api/login":
             usuario = corpo.get("usuario", "").strip().lower()
             senha = corpo.get("senha", "")
@@ -211,7 +189,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
                 self._responder_json(401, {"sucesso": False, "mensagem": resultado})
             return
 
-        # 2. Alteração de Senha
         if caminho == "/api/alterar-senha":
             login_id = corpo.get("login_id", "").strip().lower()
             senha_atual = corpo.get("senha_atual", "")
@@ -220,7 +197,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
             self._responder_json(200 if sucesso else 400, {"sucesso": sucesso, "mensagem": msg})
             return
 
-        # 3. Criar Novo Ativo (POO)
         if caminho == "/api/ativos":
             try:
                 id_ativo = int(corpo.get("id_ativo", 0))
@@ -242,7 +218,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
                 self._responder_json(400, {"sucesso": False, "mensagem": f"Erro na criação do ativo: {e}"})
             return
 
-        # 4. Vincular CVE a um Ativo (/api/ativos/<id>/cves)
         if caminho.startswith("/api/ativos/") and caminho.endswith("/cves"):
             partes = caminho.split("/")
             id_ativo = int(partes[3])
@@ -264,7 +239,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
                 self._responder_json(400, {"sucesso": False, "mensagem": "Esta CVE já está associada a este ativo."})
             return
 
-        # 5. Adicionar Dependência entre Ativos (Matriz A) (/api/ativos/<id>/dependencias)
         if caminho.startswith("/api/ativos/") and caminho.endswith("/dependencias"):
             partes = caminho.split("/")
             id_ativo = int(partes[3])
@@ -291,7 +265,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
                 })
             return
 
-        # 6. Criar Usuário (Admin)
         if caminho == "/api/usuarios":
             usuario = corpo.get("usuario", "").strip().lower()
             nome = corpo.get("nome", "").strip()
@@ -308,14 +281,10 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
 
         self._responder_json(404, {"erro": "Rota POST não encontrada."})
 
-    # =========================================================================
-    # REQUISIÇÕES PUT (Atualizações)
-    # =========================================================================
     def do_PUT(self):
         caminho = urlparse(self.path).path
         corpo = self._ler_corpo_json()
 
-        # Atualizar Ativo (/api/ativos/<id>)
         if caminho.startswith("/api/ativos/"):
             id_str = caminho.split("/")[-1]
             try:
@@ -329,7 +298,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
                 self._responder_json(404, {"sucesso": False, "mensagem": "Ativo não encontrado."})
                 return
 
-            # Preserva vulnerabilidades e dependências existentes
             vuls = list(ativo.vulnerabilidades)
             deps = dict(ativo.obter_dependencias())
 
@@ -348,13 +316,9 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
 
         self._responder_json(404, {"erro": "Rota PUT não encontrada."})
 
-    # =========================================================================
-    # REQUISIÇÕES DELETE (Exclusões)
-    # =========================================================================
     def do_DELETE(self):
         caminho = urlparse(self.path).path
 
-        # 1. Remover Dependência (/api/ativos/<id>/dependencias/<id_alvo>)
         if "/dependencias/" in caminho:
             partes = caminho.split("/")
             id_ativo = int(partes[3])
@@ -368,7 +332,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
                 self._responder_json(404, {"sucesso": False, "mensagem": "Dependência não encontrada."})
             return
 
-        # 2. Remover Ativo (/api/ativos/<id>)
         if caminho.startswith("/api/ativos/"):
             id_str = caminho.split("/")[-1]
             try:
@@ -384,7 +347,6 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
             })
             return
 
-        # 3. Remover Usuário (/api/usuarios/<login>)
         if caminho.startswith("/api/usuarios/"):
             usuario = caminho.split("/")[-1]
             sucesso, msg = deletar_usuario(usuario)
@@ -393,15 +355,11 @@ class InventarioHttpHandler(http.server.BaseHTTPRequestHandler):
 
         self._responder_json(404, {"erro": "Rota DELETE não encontrada."})
 
-
 class ServidorThreaded(socketserver.ThreadingMixIn, http.server.HTTPServer):
-    """Servidor HTTP multithread para alta concorrência e estabilidade 24 horas."""
     daemon_threads = True
     allow_reuse_address = True
 
-
 def iniciar_servidor():
-    """Inicia o servidor web e a thread de monitoramento contínuo com captura de sinais."""
     monitor = DaemonMonitorThread(intervalo_segundos=60)
     monitor.start()
 
@@ -422,7 +380,6 @@ def iniciar_servidor():
     finally:
         servidor.server_close()
         logging.info("✅ Servidor finalizado com sucesso.")
-
 
 if __name__ == "__main__":
     iniciar_servidor()

@@ -10,7 +10,6 @@ from models import (
     Vulnerabilidade,
 )
 
-
 def test_instanciacao_subclasses_heranca():
     servidor = Servidor(1, "srv-01", "Admin", "Sala A")
     roteador = RoteadorSwitch(2, "sw-01", "Admin", "Sala B")
@@ -22,29 +21,24 @@ def test_instanciacao_subclasses_heranca():
     assert isinstance(computador, Ativo)
     assert isinstance(impressora, Ativo)
 
-
 def test_polimorfismo_exibir_detalhes():
     s = Servidor(10, "srv-cluster", "Admin", "DC")
     detalhes = s.exibir_detalhes()
     assert "[Servidor]" in detalhes
     assert "srv-cluster" in detalhes
 
-
 def test_encapsulamento_adicao_vulnerabilidades():
     s = Servidor(10, "srv-teste", "Admin", "DC")
     assert s.adicionar_vulnerabilidade("CVE-2023-1234") is True
     assert "CVE-2023-1234" in s.vulnerabilidades
-    # Não deve duplicar
     assert s.adicionar_vulnerabilidade("CVE-2023-1234") is False
     assert len(s.vulnerabilidades) == 1
-
 
 def test_encapsulamento_remocao_vulnerabilidades():
     s = Servidor(10, "srv-teste", "Admin", "DC", vulnerabilidades=["CVE-2023-1234"])
     assert s.remover_vulnerabilidade("CVE-2023-1234") is True
     assert len(s.vulnerabilidades) == 0
     assert s.remover_vulnerabilidade("CVE-INEXISTENTE") is False
-
 
 @pytest.mark.parametrize(
     "tipo, classe_esperada",
@@ -58,7 +52,6 @@ def test_encapsulamento_remocao_vulnerabilidades():
 def test_factory_method_criar_ativo(tipo, classe_esperada):
     ativo = AtivoFactory.criar_ativo(1, "host-test", "Resp", "Loc", tipo=tipo)
     assert isinstance(ativo, classe_esperada)
-
 
 def test_serializacao_e_desserializacao_factory():
     dados = {

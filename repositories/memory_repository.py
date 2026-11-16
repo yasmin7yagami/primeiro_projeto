@@ -2,9 +2,7 @@ from typing import Dict, Optional
 from models import Ativo
 from repositories.base_repository import IAtivoRepository
 
-
 class MemoriaAtivoRepository(IAtivoRepository):
-    """Implementação em memória do repositório de ativos (ideal para testes unitários rápidos)."""
 
     def __init__(self, dados_iniciais: Optional[Dict[int, Ativo]] = None):
         self._dados: Dict[int, Ativo] = dict(dados_iniciais) if dados_iniciais else {}
