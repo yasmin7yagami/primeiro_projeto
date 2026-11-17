@@ -5,6 +5,7 @@ __pycache__/
 
 # Arquivos temporários
 *.tmp
+data/*.tmp
 
 # Testes e cobertura
 .pytest_cache/
