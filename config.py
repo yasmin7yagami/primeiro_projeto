@@ -1,27 +1,20 @@
 import os
+import shutil
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-NOME_ARQUIVO_ATIVOS = os.path.join(BASE_DIR, "base_ativos.json")
-NOME_ARQUIVO_USUARIOS = os.path.join(BASE_DIR, "usuarios.json")
-NOME_ARQUIVO_CVES = os.path.join(BASE_DIR, "cves_salvas.json")
+DATA_DIR = os.environ.get("DATA_DIR", os.path.join(BASE_DIR, "data"))
+os.makedirs(DATA_DIR, exist_ok=True)
 
-COR_FUNDO = "#05070a"
-COR_CARD = "#0d131a"
-COR_BORDA = "#162b3d"
-COR_AZUL_PRINCIPAL = "#0284c7"
-COR_AZUL_HOVER = "#0369a1"
-COR_VERDE_NEON = "#10b981"
-COR_VERDE_HOVER = "#059669"
-COR_TEXTO_DEST = "#38bdf8"
-COR_TEXTO_VERDE = "#34d399"
+# Garante persistência e cópia dos dados iniciais para DATA_DIR caso ainda não existam
+for nome_arquivo in ["base_ativos.json", "usuarios.json", "cves_salvas.json"]:
+    origem = os.path.join(BASE_DIR, nome_arquivo)
+    destino = os.path.join(DATA_DIR, nome_arquivo)
+    if not os.path.exists(destino) and os.path.exists(origem):
+        try:
+            shutil.copy2(origem, destino)
+        except OSError:
+            pass
 
-def inicializar_tema():
-    try:
-        import customtkinter as ctk
-
-        ctk.set_appearance_mode("Dark")
-        ctk.set_default_color_theme("blue")
-        ctk.set_widget_scaling(1.0)
-        ctk.set_window_scaling(1.0)
-    except ImportError:
-        pass
+NOME_ARQUIVO_ATIVOS = os.path.join(DATA_DIR, "base_ativos.json")
+NOME_ARQUIVO_USUARIOS = os.path.join(DATA_DIR, "usuarios.json")
+NOME_ARQUIVO_CVES = os.path.join(DATA_DIR, "cves_salvas.json")
