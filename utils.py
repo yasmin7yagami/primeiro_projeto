@@ -1,10 +1,5 @@
 import re
 
-try:
-    from deep_translator import GoogleTranslator
-except ImportError:
-    GoogleTranslator = None
-
 def sanitizar_texto(texto):
     if not texto:
         return ""
@@ -27,13 +22,3 @@ def validar_id(id_str):
     if val <= 0 or val > 999999:
         return False, "O ID deve ser entre 1 e 999999!"
     return True, val
-
-def traduzir_texto(texto_ingles):
-    if not texto_ingles:
-        return "Descrição não disponível."
-    if GoogleTranslator is None:
-        return texto_ingles
-    try:
-        return GoogleTranslator(source="en", target="pt").translate(texto_ingles)
-    except Exception:
-        return texto_ingles
