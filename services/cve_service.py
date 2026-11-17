@@ -1,7 +1,7 @@
 import json
 import os
 from config import NOME_ARQUIVO_CVES
-from utils import traduzir_texto, validar_cve
+from utils import validar_cve
 
 try:
     import requests
@@ -125,13 +125,11 @@ def consultar_cve_nvd(codigo_cve):
             else "N/A"
         )
 
-        descricao_pt = traduzir_texto(descricao_en)
-
         estrutura_cve = {
             "id": codigo_limpo,
             "cvss": cvss_score,
             "descricao_en": descricao_en,
-            "descricao": descricao_pt,
+            "descricao": descricao_en,
             "origem": "api",
         }
 
