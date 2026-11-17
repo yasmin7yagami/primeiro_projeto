@@ -1,17 +1,21 @@
+name: trab02_2026_2_12621cbs218
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: trab02_inventario_app
+    image: trab02_2026_2_12621cbs218:latest
+    container_name: trab02_2026_2_12621cbs218
     restart: always
     ports:
-      - "8000:8000"
+      - "2218:8000"
     volumes:
       - dados_ativos:/app/data
     environment:
       - PYTHONUNBUFFERED=1
       - PORT=8000
+      - DATA_DIR=/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
@@ -21,4 +25,5 @@ services:
 
 volumes:
   dados_ativos:
+    name: trab02_2026_2_12621cbs218_data
     driver: local
