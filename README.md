@@ -3,7 +3,7 @@
 **Aluna:** Yasmin Araujo Miranda  
 **Matrícula:** 12621CBS218  
 **Curso / Disciplina:** Bacharelado em Cibersegurança — Universidade Federal de Uberlândia (UFU)  
-**Identificador Oficial do Projeto (Card S5_20):** `trab02_2026_2_12621cbs218`  
+**Identificador Oficial do Projeto:** `trab02_2026_2_12621cbs218`  
 **Porta Externa Alocada no Servidor:** `2218` (Calculada por $2000 + 218$)  
 **Ciclo de Aprendizagem:** Sprints 3, 4 e 5  
 **Data Limite de Entrega:** 27/11/2026  
