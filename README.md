@@ -21,7 +21,7 @@
 
 ---
 
-## 📐 Modelo de Análise de Risco por Álgebra Linear (Requisito 4)
+## 📐 Modelo de Análise de Risco por Álgebra Linear 
 
 O modelo implementado segue rigorosamente as equações do edital:
 1. **Matriz de Incidência $M \in \{0, 1\}^{n \times m}$:** $M_{ij} = 1$ se o equipamento $i$ é afetado pela vulnerabilidade $j$.
@@ -106,27 +106,27 @@ Acesse localmente em `http://localhost:8000/`.
 
 ```text
 primeiro_projeto/
-├── app_server.py             # [Requisito 3] Servidor HTTP REST e Daemon Monitor 24h
+├── app_server.py             # Servidor HTTP REST e Daemon Monitor 24h
 ├── config.py                 # Configurações globais e resolução de diretório data/
-├── models.py                 # [Requisito 1] Classes POO: Equipamento, Servidor, Roteador, etc.
+├── models.py                 # Classes POO: Equipamento, Servidor, Roteador, etc.
 ├── utils.py                  # Sanitização e validações
-├── base_ativos.json          # [Requisito 2] Seed inicial da persistência em Array JSON
+├── base_ativos.json          # Seed inicial da persistência em Array JSON
 ├── usuarios.json             # Autenticação segura com hash PBKDF2 HMAC SHA-256
-├── compose.yaml              # [Requisito 3] Projeto Compose padronizado (trab02_2026_2_12621cbs218)
-├── Dockerfile                # [Requisito 3] Imagem Docker não-root com healthcheck
+├── compose.yaml              # Projeto Compose padronizado (trab02_2026_2_12621cbs218)
+├── Dockerfile                # Imagem Docker não-root com healthcheck
 ├── requirements.txt          # Dependências mínimas de produção e testes
 │
 ├── data/                     # Diretório de persistência montado no volume Docker
 │   ├── base_ativos.json      # Base de dados ativa
 │   └── usuarios.json         # Base de credenciais com hash
 │
-├── repositories/             # [Requisito 2] Padrão Repository
+├── repositories/             # Padrão Repository
 │   ├── base_repository.py    # Interface abstrata IAtivoRepository
 │   ├── json_repository.py    # Persistência atômica em Array JSON
 │   └── memory_repository.py  # Repositório em memória para testes
 │
 ├── services/                 # Regras de Negócio e Serviços
-│   ├── risco_service.py      # [Requisito 4] Álgebra Linear: M, v, b, A, (I-A)x=b
+│   ├── risco_service.py      # Álgebra Linear: M, v, b, A, (I-A)x=b
 │   ├── asset_service.py      # Gestão de inventário e validações
 │   ├── auth_service.py       # Gestão de usuários e senhas
 │   └── cve_service.py        # Integração e consulta de CVEs
@@ -143,7 +143,7 @@ primeiro_projeto/
     ├── conftest.py           # Fixtures de teste
     ├── test_models.py        # Testes de POO e Herança
     ├── test_repository.py    # Testes de persistência em lista JSON
-    ├── test_analise_risco.py # [Requisito 4] Validação do modelo linear e invertibilidade
+    ├── test_analise_risco.py # Validação do modelo linear e invertibilidade
     ├── test_service.py       # Testes de serviços
     └── test_strategies.py   # Testes do padrão Strategy
 ```
