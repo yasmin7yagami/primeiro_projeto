@@ -6,7 +6,7 @@ import pytest
 import app_server
 from models import TipoAtivo
 from repositories import JsonAtivoRepository
-from services import auth_service
+from services import audit_service, auth_service, cve_service
 from services.asset_service import AssetService
 from services.risco_service import RiscoLinearService
 
@@ -14,7 +14,11 @@ from services.risco_service import RiscoLinearService
 @pytest.fixture
 def ambiente_auth_temp(tmp_path, monkeypatch):
     arquivo_usuarios = tmp_path / "usuarios.json"
+    arquivo_auditoria = tmp_path / "auditoria.jsonl"
+    arquivo_cves = tmp_path / "cves_salvas.json"
     monkeypatch.setattr(auth_service, "NOME_ARQUIVO_USUARIOS", str(arquivo_usuarios))
+    monkeypatch.setattr(audit_service, "NOME_ARQUIVO_AUDITORIA", str(arquivo_auditoria))
+    monkeypatch.setattr(cve_service, "NOME_ARQUIVO_CVES", str(arquivo_cves))
     monkeypatch.setenv("ADMIN_INITIAL_PASSWORD", "AdminSegura123")
     auth_service.GERENCIADOR_SESSOES.limpar_tudo()
     auth_service.LIMITADOR_LOGIN.limpar_tudo()
@@ -345,3 +349,101 @@ def test_http_path_traversal_csp_payload_grande_e_rate_limit(servidor_teste):
     )
     assert st_rl == 429
     assert "Retry-After" in headers_rl
+
+
+def test_http_risco_matrizes_cvss_real_remocao_cve_e_auditoria(servidor_teste):
+    porta = servidor_teste
+
+    # Popula cache local da NVD com CVSS real (10.0)
+    assert cve_service.guardar_cve_local(
+        "CVE-2021-44228",
+        {"id": "CVE-2021-44228", "cvss": 10.0, "descricao": "Log4Shell"},
+    ) is True
+
+    # Login admin
+    st_l, _, _, cookies = _request(
+        porta, "POST", "/api/login", {"usuario": "admin", "senha": "AdminSegura123"}
+    )
+    assert st_l == 200
+    cookie_admin = _extrair_cookie_sid(cookies)
+
+    # Cadastra servidor (fator_exposicao = 1.25) e vincula CVE-2021-44228
+    st_cad, _, _, _ = _request(
+        porta,
+        "POST",
+        "/api/ativos",
+        {
+            "id_ativo": 50,
+            "hostname": "srv-log4j",
+            "responsavel": "SecOps",
+            "localizacao": "DC-1",
+            "tipo": "Servidores",
+        },
+        headers={"Cookie": cookie_admin},
+    )
+    assert st_cad == 201
+
+    st_vinc, _, _, _ = _request(
+        porta,
+        "POST",
+        "/api/ativos/50/cves",
+        {"cve": "CVE-2021-44228"},
+        headers={"Cookie": cookie_admin},
+    )
+    assert st_vinc == 200
+
+    # Verifica /api/risco: matrizes preenchidas + CVSS real (10.0 * 1.25 = 12.5, e não 7.5 * 1.25 = 9.375)
+    st_r, dados_r, _, _ = _request(porta, "GET", "/api/risco", headers={"Cookie": cookie_admin})
+    assert st_r == 200
+    assert dados_r["sucesso"] is True
+    assert dados_r["matriz_M"] == [[1]]
+    assert dados_r["vetor_v"] == [10.0]
+    assert dados_r["matriz_A"] == [[0.0]]
+    assert dados_r["matriz_I_A"] == [[1.0]]
+    assert dados_r["risco_proprio_b"] == [12.5]
+
+    # Remove CVE via DELETE /api/ativos/50/cves/CVE-2021-44228
+    st_del_cve, dados_del_cve, _, _ = _request(
+        porta,
+        "DELETE",
+        "/api/ativos/50/cves/CVE-2021-44228",
+        headers={"Cookie": cookie_admin},
+    )
+    assert st_del_cve == 200
+    assert dados_del_cve["sucesso"] is True
+
+    # Remover novamente deve falhar (400/404)
+    st_del_again, _, _, _ = _request(
+        porta,
+        "DELETE",
+        "/api/ativos/50/cves/CVE-2021-44228",
+        headers={"Cookie": cookie_admin},
+    )
+    assert st_del_again in (400, 404)
+
+    # Auditoria acessível apenas para admin e contendo os eventos esperados
+    st_aud, dados_aud, _, _ = _request(
+        porta, "GET", "/api/auditoria?limite=20", headers={"Cookie": cookie_admin}
+    )
+    assert st_aud == 200
+    acoes = [e["acao"] for e in dados_aud["eventos"]]
+    assert "LOGIN_SUCESSO" in acoes
+    assert "ATIVO_CRIADO" in acoes
+    assert "CVE_VINCULADA" in acoes
+    assert "CVE_REMOVIDA" in acoes
+
+    # Usuário comum não pode acessar /api/auditoria
+    _request(
+        porta,
+        "POST",
+        "/api/usuarios",
+        {"usuario": "aud_user", "nome": "Operador Comum", "senha": "UserSegura123", "role": "user"},
+        headers={"Cookie": cookie_admin},
+    )
+    _, _, _, cookies_u = _request(
+        porta, "POST", "/api/login", {"usuario": "aud_user", "senha": "UserSegura123"}
+    )
+    cookie_user = _extrair_cookie_sid(cookies_u)
+    st_aud_forb, _, _, _ = _request(porta, "GET", "/api/auditoria", headers={"Cookie": cookie_user})
+    assert st_aud_forb == 403
+
