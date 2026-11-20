@@ -1,5 +1,8 @@
 import json
+import logging
 import os
+import tempfile
+import threading
 from config import NOME_ARQUIVO_CVES
 from utils import validar_cve
 
@@ -12,25 +15,64 @@ except ImportError:
     import urllib.request
     import urllib.error
 
+_CVE_LOCK = threading.RLock()
+
 def carregar_cves_locais():
-    if not os.path.exists(NOME_ARQUIVO_CVES):
-        return {}
-    try:
-        with open(NOME_ARQUIVO_CVES, "r", encoding="utf-8-sig") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    with _CVE_LOCK:
+        if not os.path.exists(NOME_ARQUIVO_CVES):
+            return {}
+        try:
+            with open(NOME_ARQUIVO_CVES, "r", encoding="utf-8-sig") as f:
+                dados = json.load(f)
+                return dados if isinstance(dados, dict) else {}
+        except Exception:
+            return {}
+
+def obter_mapa_severidades_locais():
+    cves_locais = carregar_cves_locais()
+    mapa = {}
+    for codigo, dados in cves_locais.items():
+        if not isinstance(dados, dict):
+            continue
+        cvss = dados.get("cvss")
+        try:
+            score = float(cvss)
+            if 0.0 <= score <= 10.0:
+                mapa[str(codigo).strip().upper()] = score
+        except (TypeError, ValueError):
+            continue
+    return mapa
 
 def guardar_cve_local(codigo_cve, dados_cve):
-    dados_locais = carregar_cves_locais()
-    dados_locais[codigo_cve] = dados_cve
-    try:
-        with open(NOME_ARQUIVO_CVES, "w", encoding="utf-8") as f:
-            json.dump(dados_locais, f, indent=4, ensure_ascii=False)
-        return True
-    except Exception as e:
-        print(f"⚠️ Erro ao salvar cache da CVE: {e}")
-        return False
+    with _CVE_LOCK:
+        dados_locais = carregar_cves_locais()
+        dados_locais[codigo_cve] = dados_cve
+        diretorio = os.path.dirname(os.path.abspath(NOME_ARQUIVO_CVES))
+        os.makedirs(diretorio, exist_ok=True)
+        arquivo_temp = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=diretorio,
+                prefix=".cves_",
+                suffix=".tmp",
+                delete=False,
+            ) as f:
+                arquivo_temp = f.name
+                json.dump(dados_locais, f, indent=4, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(arquivo_temp, NOME_ARQUIVO_CVES)
+            return True
+        except Exception as e:
+            logging.error(f"⚠️ Erro ao salvar cache da CVE: {e}")
+            if arquivo_temp and os.path.exists(arquivo_temp):
+                try:
+                    os.remove(arquivo_temp)
+                except OSError:
+                    pass
+            return False
 
 def traduzir_severidade(cvss_score):
     try:
@@ -137,4 +179,5 @@ def consultar_cve_nvd(codigo_cve):
         return estrutura_cve
 
     except Exception as e:
-        return {"erro": f"Falha na conexão com a NVD: {e}"}
+        logging.warning(f"Falha na conexão com a NVD para {codigo_limpo}: {e}")
+        return {"erro": "Falha na conexão com a base NVD. Tente novamente mais tarde."}
