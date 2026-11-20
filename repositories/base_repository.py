@@ -23,3 +23,7 @@ class IAtivoRepository(ABC):
     @abstractmethod
     def existe(self, id_ativo: int) -> bool:
         pass
+
+    @abstractmethod
+    def existe_hostname(self, hostname: str, ignorar_id: Optional[int] = None) -> bool:
+        pass
