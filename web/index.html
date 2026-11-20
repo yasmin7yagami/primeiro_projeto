@@ -16,10 +16,10 @@
         <h2>UFU — CIBERSEGURANÇA</h2>
         <p>Sistema de Gestão de Inventário & Análise de Risco</p>
       </div>
-      <form id="form-login" onsubmit="event.preventDefault(); app.efetuarLogin();">
+      <form id="form-login">
         <div class="form-group">
           <label for="login-usuario">Usuário / Identificador</label>
-          <input type="text" id="login-usuario" placeholder="Ex: admin ou yas" required autocomplete="username">
+          <input type="text" id="login-usuario" placeholder="Ex: admin" required autocomplete="username">
         </div>
         <div class="form-group">
           <label for="login-senha">Senha de Acesso</label>
@@ -28,7 +28,7 @@
         <button type="submit" class="btn btn-primary btn-block">Acessar Sistema 🔐</button>
       </form>
       <div class="login-footer">
-        <small>Padrão inicial: <strong>user</strong> / <strong>user123</strong></small>
+        <small>Acesso restrito — autenticação obrigatória.</small>
       </div>
     </div>
   </div>
@@ -52,18 +52,18 @@
           <span id="header-user-name">👤 Usuário</span>
           <span id="header-user-role" class="badge badge-role">USER</span>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="app.abrirModalSenha()">Senha 🔑</button>
-        <button class="btn btn-danger btn-sm" onclick="app.efetuarLogout()">Sair 🚪</button>
+        <button id="btn-abrir-modal-senha" type="button" class="btn btn-outline btn-sm">Senha 🔑</button>
+        <button id="btn-logout" type="button" class="btn btn-danger btn-sm">Sair 🚪</button>
       </div>
     </header>
 
     
     <nav class="app-nav">
-      <button class="nav-tab active" onclick="app.mudarAba('dashboard')">📊 Relatório & Álgebra Linear</button>
-      <button class="nav-tab" onclick="app.mudarAba('cadastrar')">➕ Novo Ativo</button>
-      <button class="nav-tab" onclick="app.mudarAba('atualizar')">✏️ Gerenciar Ativos</button>
-      <button class="nav-tab" onclick="app.mudarAba('vulnerabilidades')">⚠️ Vulnerabilidades & NVD</button>
-      <button id="tab-btn-usuarios" class="nav-tab" onclick="app.mudarAba('usuarios')" style="display: none;">👥 Gestão de Usuários</button>
+      <button type="button" class="nav-tab active" data-tab="dashboard">📊 Relatório & Álgebra Linear</button>
+      <button type="button" class="nav-tab" data-tab="cadastrar">➕ Novo Ativo</button>
+      <button type="button" class="nav-tab" data-tab="atualizar">✏️ Gerenciar Ativos</button>
+      <button type="button" class="nav-tab" data-tab="vulnerabilidades">⚠️ Vulnerabilidades & NVD</button>
+      <button id="tab-btn-usuarios" type="button" class="nav-tab" data-tab="usuarios" style="display: none;">👥 Gestão de Usuários</button>
     </nav>
 
     
@@ -98,12 +98,12 @@
         
         <div class="panel-header">
           <div class="search-box">
-            <input type="text" id="filtro-busca" placeholder="🔍 Filtrar por Hostname, Responsável, Tipo ou CVE..." oninput="app.filtrarTabela()">
-            <button class="btn btn-secondary btn-sm" onclick="app.limparFiltro()">Limpar</button>
+            <input type="text" id="filtro-busca" placeholder="🔍 Filtrar por Hostname, Responsável, Tipo ou CVE...">
+            <button id="btn-limpar-filtro" type="button" class="btn btn-secondary btn-sm">Limpar</button>
           </div>
           <div class="panel-buttons">
-            <button class="btn btn-secondary" onclick="app.abrirModalMatrizes()">📐 Inspecionar Matrizes (M, v, A)</button>
-            <button class="btn btn-success" onclick="app.carregarDados()">Recalcular Risco ⚡</button>
+            <button id="btn-abrir-matrizes" type="button" class="btn btn-secondary">📐 Inspecionar Matrizes (M, v, A)</button>
+            <button id="btn-recalcular-risco" type="button" class="btn btn-success">Recalcular Risco ⚡</button>
           </div>
         </div>
 
@@ -136,7 +136,7 @@
         <div class="card form-card">
           <h2>➕ Cadastro de Novo Ativo (Orientação a Objetos)</h2>
           <p class="section-desc">Instanciação polimórfica de subclasses derivadas da classe <code>Equipamento</code> (Requisito 1 da Tabela 1).</p>
-          <form id="form-cadastrar" onsubmit="event.preventDefault(); app.salvarNovoAtivo();">
+          <form id="form-cadastrar">
             <div class="form-row">
               <div class="form-group col-4">
                 <label for="cad-id">ID Único (Numérico) *</label>
@@ -144,7 +144,7 @@
               </div>
               <div class="form-group col-8">
                 <label for="cad-hostname">Hostname / Nome do Equipamento *</label>
-                <input type="text" id="cad-hostname" placeholder="Ex: srv-web-01" required>
+                <input type="text" id="cad-hostname" maxlength="63" placeholder="Ex: srv-web-01" required>
               </div>
             </div>
 
@@ -162,7 +162,7 @@
             <div class="form-row">
               <div class="form-group col-6">
                 <label for="cad-tipo">Tipo de Equipamento (Subclasse POO) *</label>
-                <select id="cad-tipo" onchange="app.atualizarCamposDinamicos('cad')" required>
+                <select id="cad-tipo" required>
                   <option value="Servidores">Servidores (Fator Exp: 1.25x)</option>
                   <option value="Roteadores/Switches">Roteadores / Switches (Fator Exp: 1.10x)</option>
                   <option value="Computadores">Computadores / Notebooks (Fator Exp: 0.85x)</option>
@@ -200,23 +200,23 @@
 
           <div class="form-group">
             <label for="sel-ativo-gerenciar">Selecione o Ativo para Gerenciar:</label>
-            <select id="sel-ativo-gerenciar" onchange="app.carregarDadosParaEdicao()">
+            <select id="sel-ativo-gerenciar">
               <option value="">-- Escolha um ativo da lista --</option>
             </select>
           </div>
 
           <div id="box-edicao-ativo" style="display: none;">
-            <form id="form-editar" onsubmit="event.preventDefault(); app.salvarEdicaoAtivo();">
+            <form id="form-editar">
               <input type="hidden" id="edit-id">
 
               <div class="form-row">
                 <div class="form-group col-6">
                   <label for="edit-hostname">Hostname</label>
-                  <input type="text" id="edit-hostname" required>
+                  <input type="text" id="edit-hostname" maxlength="63" required>
                 </div>
                 <div class="form-group col-6">
                   <label for="edit-tipo">Tipo de Ativo</label>
-                  <select id="edit-tipo" onchange="app.atualizarCamposDinamicos('edit')" required>
+                  <select id="edit-tipo" required>
                     <option value="Servidores">Servidores</option>
                     <option value="Roteadores/Switches">Roteadores / Switches</option>
                     <option value="Computadores">Computadores</option>
@@ -252,7 +252,7 @@
                     <input type="number" id="input-dependencia-peso" step="0.05" min="0.01" max="0.99" placeholder="Ex: 0.30">
                   </div>
                   <div class="form-group col-2">
-                    <button type="button" class="btn btn-secondary btn-block" onclick="app.adicionarDependencia()">Vincular ➕</button>
+                    <button id="btn-vincular-dependencia" type="button" class="btn btn-secondary btn-block">Vincular ➕</button>
                   </div>
                 </div>
 
@@ -263,7 +263,7 @@
 
               <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Salvar Alterações 💾</button>
-                <button type="button" class="btn btn-danger" onclick="app.excluirAtivoSelecionado()">Excluir Equipamento 🗑️</button>
+                <button id="btn-excluir-ativo" type="button" class="btn btn-danger">Excluir Equipamento 🗑️</button>
               </div>
             </form>
           </div>
@@ -282,7 +282,7 @@
               <input type="text" id="input-cve-busca" placeholder="CVE-AAAA-NNNN" maxlength="20">
             </div>
             <div class="form-group col-4">
-              <button class="btn btn-primary btn-block" onclick="app.consultarNVD()">Consultar NVD Oficial 🌐</button>
+              <button id="btn-consultar-nvd" type="button" class="btn btn-primary btn-block">Consultar NVD Oficial 🌐</button>
             </div>
           </div>
 
@@ -304,7 +304,7 @@
                 </select>
               </div>
               <div class="form-group col-4 align-end">
-                <button class="btn btn-success btn-block" onclick="app.vincularCveAoAtivo()">Vincular ao Ativo 🔗</button>
+                <button id="btn-vincular-cve" type="button" class="btn btn-success btn-block">Vincular ao Ativo 🔗</button>
               </div>
             </div>
           </div>
@@ -321,10 +321,10 @@
             
             <div>
               <h3>Cadastrar Novo Usuário</h3>
-              <form id="form-novo-usuario" onsubmit="event.preventDefault(); app.cadastrarUsuario();">
+              <form id="form-novo-usuario">
                 <div class="form-group">
                   <label for="novo-user-login">Login / Usuário:</label>
-                  <input type="text" id="novo-user-login" placeholder="Ex: camila" required>
+                  <input type="text" id="novo-user-login" placeholder="Ex: camila" minlength="3" maxlength="32" required>
                 </div>
                 <div class="form-group">
                   <label for="novo-user-nome">Nome Completo:</label>
@@ -332,7 +332,7 @@
                 </div>
                 <div class="form-group">
                   <label for="novo-user-senha">Senha Provisória:</label>
-                  <input type="password" id="novo-user-senha" placeholder="Mínimo 6 caracteres" required>
+                  <input type="password" id="novo-user-senha" placeholder="Mínimo 8 caracteres (letras e números)" minlength="8" required>
                 </div>
                 <div class="form-group">
                   <label for="novo-user-role">Perfil de Acesso:</label>
@@ -374,24 +374,24 @@
     <div class="modal-card">
       <div class="modal-header">
         <h3>Alterar Senha de Acesso 🔑</h3>
-        <button class="modal-close" onclick="app.fecharModalSenha()">×</button>
+        <button id="btn-fechar-modal-senha" type="button" class="modal-close">×</button>
       </div>
-      <form onsubmit="event.preventDefault(); app.confirmarAlteracaoSenha();">
+      <form id="form-alterar-senha">
         <div class="form-group">
           <label for="senha-atual">Senha Atual</label>
           <input type="password" id="senha-atual" required>
         </div>
         <div class="form-group">
-          <label for="senha-nova">Nova Senha (mín. 6 dígitos)</label>
-          <input type="password" id="senha-nova" minlength="6" required>
+          <label for="senha-nova">Nova Senha (mín. 8 caracteres, letras e números)</label>
+          <input type="password" id="senha-nova" minlength="8" required>
         </div>
         <div class="form-group">
           <label for="senha-confirma">Confirmar Nova Senha</label>
-          <input type="password" id="senha-confirma" minlength="6" required>
+          <input type="password" id="senha-confirma" minlength="8" required>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Salvar Nova Senha</button>
-          <button type="button" class="btn btn-secondary" onclick="app.fecharModalSenha()">Cancelar</button>
+          <button id="btn-cancelar-modal-senha" type="button" class="btn btn-secondary">Cancelar</button>
         </div>
       </form>
     </div>
@@ -402,7 +402,7 @@
     <div class="modal-card modal-large">
       <div class="modal-header">
         <h3>📐 Inspeção do Modelo de Álgebra Linear: (I - A) x = b</h3>
-        <button class="modal-close" onclick="app.fecharModalMatrizes()">×</button>
+        <button id="btn-fechar-modal-matrizes" type="button" class="modal-close">×</button>
       </div>
       <div class="modal-body">
         <div class="matrix-section">
