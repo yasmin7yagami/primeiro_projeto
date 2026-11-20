@@ -238,8 +238,16 @@
 
               
               <div class="dependency-box">
+                <h3>⚠️ Vulnerabilidades Vinculadas (CVEs)</h3>
+                <p class="sub">Clique no <strong>×</strong> para desvincular uma vulnerabilidade já mitigada ou associada por engano:</p>
+                <div id="lista-cves-ativo" class="chips-container">
+                  
+                </div>
+              </div>
+
+              <div class="dependency-box">
                 <h3>🔗 Dependências de Risco Transmitido (Matriz A)</h3>
-                <p class="sub">Define a fração de risco $A_{ij} \in [0, 1)$ transmitida de outro equipamento para este:</p>
+                <p class="sub">Define a fração de risco A<sub>ij</sub> ∈ [0, 1) transmitida de outro equipamento para este:</p>
                 <div class="form-row align-end">
                   <div class="form-group col-6">
                     <label for="sel-dependencia-alvo">Equipamento Fornecedor (j):</label>
@@ -406,19 +414,19 @@
       </div>
       <div class="modal-body">
         <div class="matrix-section">
-          <h4>1. Matriz de Incidência $M \in \{0, 1\}^{n \times m}$ & Severidades $v$</h4>
-          <p class="matrix-desc">Mapeia cada equipamento $i$ às vulnerabilidades $j$ que o afetam, resultando no risco próprio $b = M \cdot v$:</p>
+          <h4>1. Matriz de Incidência M ∈ {0, 1}<sup>n×m</sup> & Severidades v</h4>
+          <p class="matrix-desc">Mapeia cada equipamento <em>i</em> às vulnerabilidades <em>j</em> que o afetam, resultando no risco próprio <strong>b = M · v</strong>:</p>
           <div id="matriz-M-container" class="matrix-render"></div>
         </div>
 
         <div class="matrix-section">
-          <h4>2. Matriz de Dependências $A \in \mathbb{R}^{n \times n}$ & Sistema $(I - A)$</h4>
-          <p class="matrix-desc">Fração de risco transmitida entre equipamentos com $A_{ii} = 0$. Matriz $(I - A)$ com verificação de invertibilidade:</p>
+          <h4>2. Matriz de Dependências A ∈ ℝ<sup>n×n</sup> & Sistema (I − A)</h4>
+          <p class="matrix-desc">Fração de risco transmitida entre equipamentos com A<sub>ii</sub> = 0. Matriz (I − A) com verificação de invertibilidade:</p>
           <div id="matriz-A-container" class="matrix-render"></div>
         </div>
 
         <div class="matrix-section">
-          <h4>3. Solução do Sistema: Risco Efetivo $x$</h4>
+          <h4>3. Solução do Sistema: Risco Efetivo x</h4>
           <div id="vetores-solucao-container" class="matrix-render"></div>
         </div>
       </div>
