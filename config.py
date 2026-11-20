@@ -18,3 +18,4 @@ for nome_arquivo in ["base_ativos.json", "usuarios.json", "cves_salvas.json"]:
 NOME_ARQUIVO_ATIVOS = os.path.join(DATA_DIR, "base_ativos.json")
 NOME_ARQUIVO_USUARIOS = os.path.join(DATA_DIR, "usuarios.json")
 NOME_ARQUIVO_CVES = os.path.join(DATA_DIR, "cves_salvas.json")
+NOME_ARQUIVO_AUDITORIA = os.path.join(DATA_DIR, "auditoria.jsonl")
