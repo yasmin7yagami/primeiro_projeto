@@ -17,3 +17,10 @@ htmlcov/
 venv/
 .venv/
 env/
+
+# Credenciais e variáveis locais
+.env
+usuarios.json
+data/usuarios.json
+auditoria.jsonl
+data/auditoria.jsonl
