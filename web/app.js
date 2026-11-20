@@ -477,7 +477,67 @@ class InventarioApp {
     document.getElementById("edit-localizacao").value = ativo.localizacao || "";
     document.getElementById("edit-tipo").value = ativo.tipo || "Servidores";
 
+    this.renderizarChipsCves(ativo);
     this.renderizarChipsDependencias(ativo);
+  }
+
+  renderizarChipsCves(ativo) {
+    const container = document.getElementById("lista-cves-ativo");
+    if (!container) return;
+    container.textContent = "";
+
+    const vuls = ativo.vulnerabilidades || [];
+    if (vuls.length === 0) {
+      const vazio = document.createElement("span");
+      vazio.style.color = "var(--text-muted)";
+      vazio.style.fontSize = "12px";
+      vazio.textContent = "Nenhuma vulnerabilidade vinculada a este ativo.";
+      container.appendChild(vazio);
+      return;
+    }
+
+    vuls.forEach((cve) => {
+      const chip = document.createElement("div");
+      chip.className = "chip";
+
+      const texto = document.createElement("span");
+      const strongCve = document.createElement("strong");
+      strongCve.textContent = cve;
+      texto.appendChild(strongCve);
+
+      const btnRemover = document.createElement("span");
+      btnRemover.className = "chip-remove";
+      btnRemover.title = `Remover ${cve}`;
+      btnRemover.textContent = "×";
+      btnRemover.addEventListener("click", () => this.removerCve(cve));
+
+      chip.appendChild(texto);
+      chip.appendChild(btnRemover);
+      container.appendChild(chip);
+    });
+  }
+
+  async removerCve(cve) {
+    const idAtivo = document.getElementById("edit-id").value;
+    if (!confirm(`Desvincular a vulnerabilidade ${cve} do Ativo ID ${idAtivo}?`)) return;
+
+    try {
+      const res = await this.apiFetch(
+        `/api/ativos/${encodeURIComponent(idAtivo)}/cves/${encodeURIComponent(cve)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+
+      if (res.ok && data.sucesso) {
+        this.mostrarToast(data.mensagem || `${cve} removida!`, "info");
+        await this.carregarDados();
+        this.carregarDadosParaEdicao();
+      } else {
+        this.mostrarToast(data.mensagem || "Erro ao remover CVE.", "error");
+      }
+    } catch (e) {
+      this.mostrarToast("Erro ao remover CVE.", "error");
+    }
   }
 
   renderizarChipsDependencias(ativo) {
