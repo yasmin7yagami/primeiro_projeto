@@ -42,7 +42,7 @@
         <span class="brand-icon">🛡️</span>
         <div>
           <h1>UFU — CIBERSEGURANÇA</h1>
-          <span class="header-subtitle">Aplicação de Inventário OO & Análise de Risco Linear (Trabalho 02)</span>
+          <span class="header-subtitle">Aplicação de Inventário & Análise de Risco Linear (Trabalho 02)</span>
         </div>
       </div>
 
@@ -81,7 +81,7 @@
           <div class="card metric-card">
             <span class="metric-title">Equipamentos no Inventário</span>
             <span id="metric-total-ativos" class="metric-value">--</span>
-            <small class="metric-sub">Classes POO derivadas</small>
+            <small class="metric-sub"></small>
           </div>
           <div class="card metric-card">
             <span class="metric-title">Invertibilidade (I - A)</span>
@@ -114,14 +114,14 @@
               <tr>
                 <th>ID</th>
                 <th>Hostname</th>
-                <th>Tipo (Subclasse POO)</th>
+                <th>Tipo </th>
                 <th>Responsável</th>
                 <th>Localização</th>
                 <th>Vulnerabilidades</th>
                 <th>Fator Exp.</th>
-                <th>Risco Próprio (b)</th>
-                <th>Risco Efetivo (x)</th>
-                <th>Dependências (Matriz A)</th>
+                <th>Risco Próprio </th>
+                <th>Risco Efetivo </th>
+                <th>Dependências </th>
               </tr>
             </thead>
             <tbody id="tbody-inventario">
@@ -134,8 +134,8 @@
       
       <section id="aba-cadastrar" class="tab-pane">
         <div class="card form-card">
-          <h2>➕ Cadastro de Novo Ativo (Orientação a Objetos)</h2>
-          <p class="section-desc">Instanciação polimórfica de subclasses derivadas da classe <code>Equipamento</code> (Requisito 1 da Tabela 1).</p>
+          <h2>➕ Cadastro de Novo Ativo </h2>
+          <p class="section-desc">Instanciação polimórfica de subclasses derivadas da classe <code>Equipamento</code> </p>
           <form id="form-cadastrar">
             <div class="form-row">
               <div class="form-group col-4">
@@ -161,12 +161,12 @@
 
             <div class="form-row">
               <div class="form-group col-6">
-                <label for="cad-tipo">Tipo de Equipamento (Subclasse POO) *</label>
+                <label for="cad-tipo">Tipo de Equipamento  *</label>
                 <select id="cad-tipo" required>
-                  <option value="Servidores">Servidores (Fator Exp: 1.25x)</option>
-                  <option value="Roteadores/Switches">Roteadores / Switches (Fator Exp: 1.10x)</option>
-                  <option value="Computadores">Computadores / Notebooks (Fator Exp: 0.85x)</option>
-                  <option value="Impressoras">Impressoras de Rede (Fator Exp: 0.50x)</option>
+                  <option value="Servidores">Servidores </option>
+                  <option value="Roteadores/Switches">Roteadores / Switches</option>
+                  <option value="Computadores">Computadores / Notebooks </option>
+                  <option value="Impressoras">Impressoras de Rede </option>
                 </select>
               </div>
 
@@ -246,11 +246,11 @@
               </div>
 
               <div class="dependency-box">
-                <h3>🔗 Dependências de Risco Transmitido (Matriz A)</h3>
-                <p class="sub">Define a fração de risco A<sub>ij</sub> ∈ [0, 1) transmitida de outro equipamento para este:</p>
+                <h3>🔗 Dependências de Risco Transmitido </h3>
+                <p class="sub">Define a fração de risco transmitida de outro equipamento para este:</p>
                 <div class="form-row align-end">
                   <div class="form-group col-6">
-                    <label for="sel-dependencia-alvo">Equipamento Fornecedor (j):</label>
+                    <label for="sel-dependencia-alvo">Equipamento Fornecedor :</label>
                     <select id="sel-dependencia-alvo">
                       <option value="">-- Selecione o equipamento --</option>
                     </select>
