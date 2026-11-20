@@ -78,11 +78,15 @@ class Ativo(ABC):
         dependencias: Optional[Dict[int, float]] = None,
     ):
         self._id_ativo = int(id_ativo)
-        self._hostname = hostname
-        self._responsavel = responsavel
-        self._localizacao = localizacao
+        self._hostname = hostname.strip() if isinstance(hostname, str) else str(hostname)
+        self._responsavel = responsavel.strip() if isinstance(responsavel, str) else str(responsavel)
+        self._localizacao = localizacao.strip() if isinstance(localizacao, str) else str(localizacao)
         self._tipo = tipo
-        self._vulnerabilidades = list(vulnerabilidades) if vulnerabilidades else []
+        self._vulnerabilidades: List[str] = []
+        if vulnerabilidades:
+            for cve in vulnerabilidades:
+                if isinstance(cve, str):
+                    self.adicionar_vulnerabilidade(cve)
         self._dependencias: Dict[int, float] = {}
         if dependencias:
             for k, v in dependencias.items():
@@ -125,13 +129,19 @@ class Ativo(ABC):
         return list(self._vulnerabilidades)
 
     def adicionar_vulnerabilidade(self, cve: str) -> bool:
+        if not isinstance(cve, str):
+            return False
         cve_limpo = cve.strip().upper()
+        if not cve_limpo:
+            return False
         if cve_limpo not in self._vulnerabilidades:
             self._vulnerabilidades.append(cve_limpo)
             return True
         return False
 
     def remover_vulnerabilidade(self, cve: str) -> bool:
+        if not isinstance(cve, str):
+            return False
         cve_limpo = cve.strip().upper()
         if cve_limpo in self._vulnerabilidades:
             self._vulnerabilidades.remove(cve_limpo)
@@ -273,7 +283,11 @@ class RoteadorSwitch(Ativo):
             vulnerabilidades=vulnerabilidades,
             dependencias=dependencias,
         )
-        self.qtd_portas = int(qtd_portas)
+        try:
+            portas = int(qtd_portas) if qtd_portas not in (None, "") else 24
+        except (TypeError, ValueError):
+            portas = 24
+        self.qtd_portas = max(1, min(portas, 1024))
         self.camada = camada
 
     def exibir_detalhes(self) -> str:
@@ -385,6 +399,10 @@ class AtivoFactory:
         TipoAtivo.IMPRESSORAS.value: Impressora,
         "IMPRESSORAS": Impressora,
     }
+
+    @classmethod
+    def tipo_valido(cls, tipo: str) -> bool:
+        return isinstance(tipo, str) and tipo in cls.MAPA_CLASSES
 
     @classmethod
     def criar_ativo(
